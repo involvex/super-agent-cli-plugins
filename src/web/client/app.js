@@ -6,6 +6,21 @@ const messagesContainer = document.getElementById("messages");
 const promptInput = document.getElementById("prompt-input");
 const sendBtn = document.getElementById("send-btn");
 const statusEl = document.getElementById("status");
+const autocompleteEl = document.getElementById("autocomplete");
+const fileTreeEl = document.getElementById("file-tree");
+const sessionsListEl = document.getElementById("sessions-list");
+
+// Slash commands
+const SLASH_COMMANDS = [
+  { cmd: "/chat", desc: "Manage chat sessions" },
+  { cmd: "/config", desc: "Configure settings" },
+  { cmd: "/models", desc: "Select AI model" },
+  { cmd: "/provider", desc: "Select LLM provider" },
+  { cmd: "/mcp", desc: "MCP server management" },
+  { cmd: "/plugin", desc: "Plugin management" },
+  { cmd: "/search", desc: "Search files/code" },
+  { cmd: "/help", desc: "Show help" },
+];
 
 // Connect to WebSocket
 function connect() {
@@ -18,6 +33,10 @@ function connect() {
     isConnected = true;
     updateStatus("Connected", "connected");
     sendBtn.disabled = false;
+
+    // Load initial data
+    requestFileTree();
+    requestSessions();
   };
 
   ws.onclose = () => {
@@ -48,9 +67,63 @@ function updateStatus(text, className = "") {
   statusEl.className = `status ${className}`;
 }
 
+// Show update banner
+function showUpdateBanner(currentVersion, latestVersion) {
+  const banner = document.createElement("div");
+  banner.className = "update-banner";
+  banner.innerHTML = `
+        <span>📦 Update available: ${currentVersion} → ${latestVersion}</span>
+        <button onclick="this.parentElement.remove()">✕</button>
+    `;
+  document.body.insertBefore(banner, document.body.firstChild);
+}
+
+// Request file tree
+function requestFileTree() {
+  if (isConnected) {
+    ws.send(JSON.stringify({ type: "get_file_tree" }));
+  }
+}
+
+// Request sessions list
+function requestSessions() {
+  if (isConnected) {
+    ws.send(JSON.stringify({ type: "list_sessions" }));
+  }
+}
+
+// Switch session
+function switchSession(sessionId) {
+  if (isConnected) {
+    ws.send(JSON.stringify({ type: "switch_session", sessionId }));
+  }
+}
+
+// View file
+function viewFile(filePath) {
+  if (isConnected) {
+    ws.send(JSON.stringify({ type: "get_file_content", path: filePath }));
+  }
+}
+
 // Handle incoming messages
 function handleMessage(data) {
   switch (data.type) {
+    case "update_available":
+      showUpdateBanner(data.currentVersion, data.latestVersion);
+      break;
+    case "file_tree":
+      renderFileTree(data.tree);
+      break;
+    case "file_content":
+      showFilePreview(data.path, data.content);
+      break;
+    case "sessions_list":
+      renderSessions(data.sessions);
+      break;
+    case "session_switched":
+      handleSessionSwitch(data.session);
+      break;
     case "user_message":
       addMessage(data.content, "user");
       break;
@@ -74,6 +147,78 @@ function handleMessage(data) {
   }
 }
 
+// Render file tree
+function renderFileTree(tree) {
+  if (!tree || tree.length === 0) {
+    fileTreeEl.innerHTML = '<p class="empty-state">No files indexed yet</p>';
+    return;
+  }
+
+  const directories = tree.filter(f => f.isDirectory);
+  const files = tree.filter(f => !f.isDirectory);
+
+  let html = "";
+
+  // Show directories first
+  directories.slice(0, 50).forEach(dir => {
+    html += `
+            <div class="file-item directory">
+                📁 ${dir.name}
+            </div>
+        `;
+  });
+
+  // Then files
+  files.slice(0, 100).forEach(file => {
+    html += `
+            <div class="file-item" onclick="viewFile('${file.path}')">
+                📄 ${file.name}
+            </div>
+        `;
+  });
+
+  fileTreeEl.innerHTML = html;
+}
+
+// Render sessions
+function renderSessions(sessions) {
+  if (!sessions || sessions.length === 0) {
+    sessionsListEl.innerHTML = '<p class="empty-state">No saved sessions</p>';
+    return;
+  }
+
+  let html = "";
+  sessions.forEach(session => {
+    const date = new Date(session.lastAccessed).toLocaleDateString();
+    html += `
+            <div class="session-item" onclick="switchSession('${session.id}')">
+                <div class="session-name">${session.name}</div>
+                <div class="session-meta">${session.messageCount} messages · ${date}</div>
+            </div>
+        `;
+  });
+
+  sessionsListEl.innerHTML = html;
+}
+
+// Handle session switch
+function handleSessionSwitch(session) {
+  // Clear current messages
+  messagesContainer.innerHTML = "";
+
+  // Load session messages
+  session.messages.forEach(msg => {
+    addMessage(msg.content, msg.role);
+  });
+
+  updateStatus(`Session: ${session.name}`, "connected");
+}
+
+// Show file preview
+function showFilePreview(path, content) {
+  addMessage(`📄 ${path}:\n\`\`\`\n${content}\n\`\`\``, "assistant");
+}
+
 // Add message to chat
 function addMessage(content, type) {
   const messageEl = document.createElement("div");
@@ -81,6 +226,47 @@ function addMessage(content, type) {
   messageEl.textContent = content;
   messagesContainer.appendChild(messageEl);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Slash command autocomplete
+function handleAutocomplete(input) {
+  const value = input.trim();
+
+  if (!value.startsWith("/")) {
+    autocompleteEl.classList.add("hidden");
+    return;
+  }
+
+  const query = value.toLowerCase();
+  const matches = SLASH_COMMANDS.filter(cmd =>
+    cmd.cmd.toLowerCase().startsWith(query),
+  );
+
+  if (matches.length === 0) {
+    autocompleteEl.classList.add("hidden");
+    return;
+  }
+
+  let html = "";
+  matches.forEach((cmd, index) => {
+    html += `
+            <div class="autocomplete-item" data-cmd="${cmd.cmd}" data-index="${index}">
+                <strong>${cmd.cmd}</strong> - ${cmd.desc}
+            </div>
+        `;
+  });
+
+  autocompleteEl.innerHTML = html;
+  autocompleteEl.classList.remove("hidden");
+
+  // Add click handlers
+  autocompleteEl.querySelectorAll(".autocomplete-item").forEach(item => {
+    item.addEventListener("click", () => {
+      promptInput.value = item.dataset.cmd + " ";
+      autocompleteEl.classList.add("hidden");
+      promptInput.focus();
+    });
+  });
 }
 
 // Send message
@@ -98,6 +284,7 @@ function sendMessage() {
   );
 
   promptInput.value = "";
+  autocompleteEl.classList.add("hidden");
   sendBtn.disabled = true;
   promptInput.disabled = true;
   updateStatus("Processing...", "");
@@ -106,12 +293,36 @@ function sendMessage() {
 // Event listeners
 sendBtn.addEventListener("click", sendMessage);
 
+promptInput.addEventListener("input", e => {
+  handleAutocomplete(e.target.value);
+});
+
 promptInput.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
+
+    // Check if autocomplete is visible
+    if (!autocompleteEl.classList.contains("hidden")) {
+      const firstItem = autocompleteEl.querySelector(".autocomplete-item");
+      if (firstItem) {
+        promptInput.value = firstItem.dataset.cmd + " ";
+        autocompleteEl.classList.add("hidden");
+        return;
+      }
+    }
+
     sendMessage();
+  } else if (e.key === "Escape") {
+    autocompleteEl.classList.add("hidden");
   }
 });
+
+document
+  .getElementById("refresh-files")
+  .addEventListener("click", requestFileTree);
+document
+  .getElementById("refresh-sessions")
+  .addEventListener("click", requestSessions);
 
 // Initialize connection
 connect();

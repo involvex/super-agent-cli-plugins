@@ -43,17 +43,31 @@ export class WebServer {
     res: ServerResponse,
   ): Promise<void> {
     const url = req.url || "/";
-    let filePath = path.join(
-      __dirname,
-      "../web/client",
-      url === "/" ? "index.html" : url,
-    );
+
+    // Security: Normalize and validate the requested path
+    const requestedPath = url === "/" ? "index.html" : url;
+
+    // Remove query strings and fragments
+    const sanitizedPath = requestedPath.split("?")[0].split("#")[0];
+
+    // Resolve to absolute path and ensure it's within the client directory
+    const clientDir = path.join(__dirname, "../web/client");
+    const absolutePath = path.resolve(clientDir, sanitizedPath.substring(1));
+
+    // Security check: ensure the resolved path is within the client directory
+    if (!absolutePath.startsWith(clientDir)) {
+      res.writeHead(403, { "Content-Type": "text/plain" });
+      res.end("Forbidden");
+      return;
+    }
 
     try {
-      if (await fs.pathExists(filePath)) {
-        const stat = await fs.stat(filePath);
+      if (await fs.pathExists(absolutePath)) {
+        const stat = await fs.stat(absolutePath);
+        let filePath = absolutePath;
+
         if (stat.isDirectory()) {
-          filePath = path.join(filePath, "index.html");
+          filePath = path.join(absolutePath, "index.html");
         }
 
         const content = await fs.readFile(filePath);
@@ -76,12 +90,23 @@ export class WebServer {
     this.clients.add(ws);
     console.log(`📡 Web client connected (${this.clients.size} total)`);
 
+    // Send update notification if available
+    this.checkAndSendUpdateNotification(ws);
+
     ws.on("message", async data => {
       try {
         const message = JSON.parse(data.toString());
 
         if (message.type === "prompt") {
           await this.handlePrompt(message.content, ws);
+        } else if (message.type === "get_file_tree") {
+          await this.handleGetFileTree(ws);
+        } else if (message.type === "get_file_content") {
+          await this.handleGetFileContent(message.path, ws);
+        } else if (message.type === "list_sessions") {
+          await this.handleListSessions(ws);
+        } else if (message.type === "switch_session") {
+          await this.handleSwitchSession(message.sessionId, ws);
         }
       } catch (error) {
         console.error("WebSocket message error:", error);
@@ -147,6 +172,134 @@ export class WebServer {
           content: error.message,
         }),
       );
+    }
+  }
+
+  private async handleGetFileTree(ws: WebSocket): Promise<void> {
+    try {
+      const { getFileIndexer } = await import("../indexing/indexer");
+      const indexer = getFileIndexer();
+      const index = indexer.getIndex();
+
+      if (!index) {
+        ws.send(JSON.stringify({ type: "file_tree", tree: [] }));
+        return;
+      }
+
+      // Build simple tree structure from flat index
+      const tree = index.entries
+        .filter(
+          e => !e.path.includes("node_modules") && !e.path.startsWith("."),
+        )
+        .map(e => ({
+          path: e.path,
+          name: path.basename(e.path),
+          isDirectory: e.isDirectory,
+          size: e.size,
+        }))
+        .slice(0, 500); // Limit to 500 items for performance
+
+      ws.send(JSON.stringify({ type: "file_tree", tree }));
+    } catch (error: any) {
+      ws.send(JSON.stringify({ type: "error", content: error.message }));
+    }
+  }
+
+  private async handleGetFileContent(
+    filePath: string,
+    ws: WebSocket,
+  ): Promise<void> {
+    try {
+      const fullPath = path.join(process.cwd(), filePath);
+
+      // Security check: ensure path is within project
+      if (!fullPath.startsWith(process.cwd())) {
+        throw new Error("Access denied");
+      }
+
+      const content = await fs.readFile(fullPath, "utf-8");
+      ws.send(
+        JSON.stringify({
+          type: "file_content",
+          path: filePath,
+          content: content.slice(0, 10000), // Limit to 10KB
+        }),
+      );
+    } catch (error: any) {
+      ws.send(JSON.stringify({ type: "error", content: error.message }));
+    }
+  }
+
+  private async handleListSessions(ws: WebSocket): Promise<void> {
+    try {
+      const { getSessionManager } = await import("../utils/session-manager");
+      const sessionManager = getSessionManager();
+      const sessions = await sessionManager.listSessions();
+
+      ws.send(
+        JSON.stringify({
+          type: "sessions_list",
+          sessions: sessions.map(s => ({
+            id: s.id,
+            name: s.name,
+            workingDirectory: s.workingDirectory,
+            messageCount: s.messages.length,
+            lastAccessed: s.lastAccessed,
+          })),
+        }),
+      );
+    } catch (error: any) {
+      ws.send(JSON.stringify({ type: "error", content: error.message }));
+    }
+  }
+
+  private async handleSwitchSession(
+    sessionId: string,
+    ws: WebSocket,
+  ): Promise<void> {
+    try {
+      const { getSessionManager } = await import("../utils/session-manager");
+      const sessionManager = getSessionManager();
+      const session = await sessionManager.switchSession(sessionId);
+
+      if (session) {
+        ws.send(
+          JSON.stringify({
+            type: "session_switched",
+            session: {
+              id: session.id,
+              name: session.name,
+              workingDirectory: session.workingDirectory,
+              messages: session.messages,
+            },
+          }),
+        );
+      } else {
+        throw new Error("Session not found");
+      }
+    } catch (error: any) {
+      ws.send(JSON.stringify({ type: "error", content: error.message }));
+    }
+  }
+
+  private async checkAndSendUpdateNotification(ws: WebSocket): Promise<void> {
+    try {
+      const pkg = await import("../../package.json");
+      const { getUpdateChecker } = await import("../utils/update-checker");
+      const updateChecker = getUpdateChecker(pkg.version);
+      const updateInfo = await updateChecker.checkForUpdates();
+
+      if (updateInfo?.updateAvailable) {
+        ws.send(
+          JSON.stringify({
+            type: "update_available",
+            currentVersion: updateInfo.currentVersion,
+            latestVersion: updateInfo.latestVersion,
+          }),
+        );
+      }
+    } catch (error) {
+      // Silently ignore errors
     }
   }
 

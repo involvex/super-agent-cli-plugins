@@ -406,6 +406,22 @@ program
 
       ensureUserSettingsDirectory();
 
+      // Check for updates (non-blocking)
+      const { getUpdateChecker } = await import("./utils/update-checker");
+      const updateChecker = getUpdateChecker(pkg.version);
+      updateChecker
+        .checkForUpdates()
+        .then(updateInfo => {
+          if (updateInfo?.updateAvailable) {
+            console.log(
+              "\n" + updateChecker.formatUpdateMessage(updateInfo) + "\n",
+            );
+          }
+        })
+        .catch(() => {
+          // Silently ignore update check errors
+        });
+
       // Support variadic positional arguments for multi-word initial message
       const initialMessage = Array.isArray(message)
         ? message.join(" ")

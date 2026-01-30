@@ -7,26 +7,45 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="container">
-      <header>
-        <h1>🤖 Super Agent</h1>
-        <p class="subtitle">AI-Powered Terminal Assistant</p>
-      </header>
+    <div class="app-layout">
+      <!-- Sidebar -->
+      <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <h3>📁 Files</h3>
+          <button id="refresh-files" class="icon-btn">↻</button>
+        </div>
+        <div id="file-tree" class="file-tree"></div>
 
-      <div id="chat-container">
-        <div id="messages"></div>
+        <div class="sidebar-section">
+          <h3>💼 Sessions</h3>
+          <button id="refresh-sessions" class="icon-btn">↻</button>
+        </div>
+        <div id="sessions-list" class="sessions-list"></div>
       </div>
 
-      <div class="input-container">
-        <textarea
-          id="prompt-input"
-          placeholder="Ask Super Agent anything..."
-          rows="3"
-        ></textarea>
-        <button id="send-btn">Send</button>
-      </div>
+      <!-- Main Content -->
+      <div class="main-content">
+        <header>
+          <h1>🤖 Super Agent</h1>
+          <p class="subtitle">AI-Powered Terminal Assistant</p>
+        </header>
 
-      <div id="status" class="status"></div>
+        <div id="chat-container">
+          <div id="messages"></div>
+        </div>
+
+        <div class="input-container">
+          <div id="autocomplete" class="autocomplete hidden"></div>
+          <textarea
+            id="prompt-input"
+            placeholder="Ask Super Agent anything... (type / for commands)"
+            rows="3"
+          ></textarea>
+          <button id="send-btn">Send</button>
+        </div>
+
+        <div id="status" class="status"></div>
+      </div>
     </div>
 
     <script src="app.js"></script>
