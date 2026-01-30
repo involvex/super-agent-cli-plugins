@@ -1,3 +1,9 @@
+## [0.0.55](https://github.com/involvex/super-agent-cli/compare/v0.0.54...v0.0.55) (2026-01-30)
+
+### Features
+
+- **web:** add web interface for CLI interaction ([7cfa7c3](https://github.com/involvex/super-agent-cli/commit/7cfa7c3adf57a29391aa8ea2d7667d8e5a637013)), closes [#web-interface](https://github.com/involvex/super-agent-cli/issues/web-interface)
+
 ## [0.0.54](https://github.com/involvex/super-agent-cli/compare/v0.0.53...v0.0.54) (2026-01-30)
 
 ### Features
