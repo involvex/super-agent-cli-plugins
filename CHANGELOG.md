@@ -1,3 +1,9 @@
+## [0.0.41](https://github.com/involvex/super-agent-cli/compare/v0.0.40...v0.0.41) (2026-01-30)
+
+### Features
+
+- **cli:** add yolo mode toggle and improve keyboard shortcuts ([70d7ad0](https://github.com/involvex/super-agent-cli/commit/70d7ad027495c120f8bb4eb315bc7beef988bf2c))
+
 ## [0.0.40](https://github.com/involvex/super-agent-cli/compare/v0.0.39...v0.0.40) (2026-01-30)
 
 ### Features
