@@ -1154,6 +1154,66 @@ img {
 /* ========================================
    Footer
    ======================================== */
+.sponsor-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.btn-sponsor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-primary);
+  transition: all var(--transition-fast);
+}
+
+.btn-sponsor svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.btn-github-sponsor {
+  background: #24292e;
+  color: #ffffff;
+  border-color: #24292e;
+}
+
+.btn-github-sponsor:hover {
+  background: #2f363d;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-buy-coffee {
+  background: #ffdd00;
+  color: #222222;
+  border-color: #ffdd00;
+}
+
+.btn-buy-coffee:hover {
+  background: #ffea00;
+  color: #222222;
+  transform: translateY(-1px);
+}
+
+.btn-paypal {
+  background: #003087;
+  color: #ffffff;
+  border-color: #003087;
+}
+
+.btn-paypal:hover {
+  background: #0040a0;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
 .footer {
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border-primary);

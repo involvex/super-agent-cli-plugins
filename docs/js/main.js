@@ -17,7 +17,6 @@
       const systemPrefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)",
       ).matches;
-      Media("(prefers-color-scheme: dark)").matches;
 
       if (savedTheme) {
         document.documentElement.setAttribute("data-theme", savedTheme);

@@ -664,7 +664,13 @@ super-agent --prompt "run tests" --directory /path/to/project</code></pre>
           <div class="section-header">
             <h2 class="section-title">Configuration</h2>
             <p class="section-description">
-              Super Agent CLI uses two types of configuration files.
+              Super Agent CLI uses configuration files based on
+              <a
+                href="https://github.com/involvex/super-agent-cli/blob/main/src/schemes/settings_scheme.json"
+                target="_blank"
+                rel="noopener noreferrer"
+                >src/schemes/settings_scheme.json</a
+              >.
             </p>
           </div>
 
@@ -688,12 +694,28 @@ super-agent --prompt "run tests" --directory /path/to/project</code></pre>
               </p>
               <p class="config-description">
                 Global settings that apply across all projects. Stores API key,
-                base URL, and default model.
+                base URL, default model, UI preferences, and more.
               </p>
               <div class="code-block">
                 <pre><code class="language-json">{
-  "active_provider": "gemini",
+  "active_provider": "zai",
   "providers": {
+    "zai": {
+      "id": "zai",
+      "provider": "zai",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    },
+    "openai": {
+      "id": "openai",
+      "provider": "openai",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    },
     "gemini": {
       "id": "gemini",
       "provider": "gemini",
@@ -701,6 +723,68 @@ super-agent --prompt "run tests" --directory /path/to/project</code></pre>
       "api_key": "API_KEY",
       "base_url": "BASE_URL (optional)",
       "default_model": "MODEL_NAME"
+    },
+    "claude": {
+      "id": "claude",
+      "provider": "claude",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    },
+    "openrouter": {
+      "id": "openrouter",
+      "provider": "openrouter",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    }
+  },
+  "ui": {
+    "theme": "dark",
+    "custom_theme_path": "path/to/theme.json (optional)",
+    "show_memory_usage": true,
+    "show_token_usage": true,
+    "show_context": true,
+    "showModelInfoInChat": true
+  },
+  "auto_edit": {
+    "enabled": true,
+    "default_state": "enabled"
+  },
+  "modes": {
+    "active_mode": "plan",
+    "default_mode": "plan",
+    "modes": [
+      {
+        "name": "plan",
+        "description": "Plan mode",
+        "enabled": true,
+        "prompt": "You are a helpful assistant."
+      },
+      {
+        "name": "code",
+        "description": "Code mode",
+        "enabled": true,
+        "prompt": "You are a helpful coding assistant."
+      },
+      {
+        "name": "debug",
+        "description": "Debug mode",
+        "enabled": true,
+        "prompt": "You are a helpful debugging assistant."
+      }
+    ]
+  },
+  "context": {
+    "fileName": ["Readme.md", "Agents.md", ".super-agent/Agents.md"]
+  },
+  "experimental": {
+    "checkpointing": {
+      "enabled": true,
+      "auto_save": true,
+      "auto_load": true
     }
   }
 }</code></pre>
@@ -724,25 +808,62 @@ super-agent --prompt "run tests" --directory /path/to/project</code></pre>
               <p class="config-path"><code>.super-agent/settings.json</code></p>
               <p class="config-description">
                 Project-specific settings in your current working directory.
-                Includes MCP server configurations.
+                Includes MCP server configurations, plugins, and tools.
               </p>
               <div class="code-block">
                 <pre><code class="language-json">{
-  "active_provider": "gemini",
+  "active_provider": "zai",
   "providers": {
-    "gemini": {
-      "id": "gemini",
-      "provider": "gemini",
+    "zai": {
+      "id": "zai",
+      "provider": "zai",
       "model": "MODEL_NAME",
       "api_key": "API_KEY"
     }
   },
   "mcpServers": {
-    "linear": {
-      "name": "linear",
-      "transport": "stdio",
+    "server1": {
       "command": "npx",
-      "args": ["@linear/mcp-server"]
+      "args": ["@linear/mcp-server"],
+      "env": {
+        "VAR1": "value1",
+        "VAR2": "value2"
+      }
+    }
+  },
+  "plugins": {
+    "allowed_plugins": ["plugin1", "plugin2", "plugin3"],
+    "plugins": [
+      {
+        "name": "plugin1"
+      }
+    ]
+  },
+  "tools": {
+    "allowed_tools": ["tool1", "tool2", "tool3"],
+    "tools": [
+      {
+        "name": "npm",
+        "enabled": true
+      }
+    ]
+  },
+  "hooks": {
+    "session_start": {
+      "type": "command",
+      "command": "echo 'Session started'"
+    },
+    "session_end": {
+      "type": "command",
+      "command": "echo 'Session ended'"
+    },
+    "before_tool_use": {
+      "type": "context",
+      "command": "Log before tool use"
+    },
+    "after_tool_use": {
+      "type": "context",
+      "command": "Log after tool use"
     }
   }
 }</code></pre>
@@ -762,8 +883,8 @@ super-agent --prompt "run tests" --directory /path/to/project</code></pre>
                 fallback for global settings
               </li>
               <li>
-                <strong>System default</strong> (`gemini-3-pro-preview`) - used
-                when no other settings exist
+                <strong>System default</strong> - used when no other settings
+                exist
               </li>
             </ol>
           </div>
@@ -773,26 +894,30 @@ super-agent --prompt "run tests" --directory /path/to/project</code></pre>
             <p class="providers-description">
               Super Agent CLI uses <strong>OpenAI-compatible APIs</strong>. Any
               provider implementing the OpenAI chat completions standard works.
+              Configure providers in your settings.json file using the provider
+              IDs below.
             </p>
             <div class="providers-grid">
               <div class="provider-card">
-                <h4>Google (Gemini)</h4>
-                <code
-                  >https://generativelanguage.googleapis.com/v1beta/openai</code
-                >
+                <h4>Zai</h4>
+                <code>Provider ID: zai</code>
                 <span class="provider-badge default">Default</span>
               </div>
               <div class="provider-card">
                 <h4>OpenAI</h4>
-                <code>https://api.openai.com/v1</code>
+                <code>Provider ID: openai</code>
+              </div>
+              <div class="provider-card">
+                <h4>Google Gemini</h4>
+                <code>Provider ID: gemini</code>
+              </div>
+              <div class="provider-card">
+                <h4>Anthropic Claude</h4>
+                <code>Provider ID: claude</code>
               </div>
               <div class="provider-card">
                 <h4>OpenRouter</h4>
-                <code>https://openrouter.ai/api/v1</code>
-              </div>
-              <div class="provider-card">
-                <h4>Groq</h4>
-                <code>https://api.groq.com/openai/v1</code>
+                <code>Provider ID: openrouter</code>
               </div>
             </div>
           </div>
@@ -880,34 +1005,6 @@ super-agent mcp add linear --transport sse --url "https://mcp.linear.app/sse"</c
               Complete command and option reference.
             </p>
           </div>
-
-          <!-- <div class="api-section">
-          <h3 class="subsection-title">Environment Variables</h3>
-          <div class="table-wrapper">
-            <table class="options-table">
-              <thead>
-                <tr>
-                  <th>Variable</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>SUPER_AGENT_API_KEY</code></td>
-                  <td>Your Super Agent API key</td>
-                </tr>
-                <tr>
-                  <td><code>SUPER_AGENT_BASE_URL</code></td>
-                  <td>Custom API endpoint (if needed)</td>
-                </tr>
-                <tr>
-                  <td><code>SUPER_AGENT_MODEL</code></td>
-                  <td>Default AI model to use</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div> -->
 
           <div class="api-section">
             <h3 class="subsection-title">Tool Execution Control</h3>
@@ -1121,6 +1218,57 @@ bun run typecheck</code></pre>
               An open-source AI agent that brings the power of Super Agent
               directly into your terminal.
             </p>
+            <!-- Sponsoring Buttons -->
+            <div class="sponsor-buttons">
+              <a
+                href="https://github.com/sponsors/involvex"
+                class="btn btn-sponsor btn-github-sponsor"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                  />
+                </svg>
+                Sponsor on GitHub
+              </a>
+              <a
+                href="https://buymeacoffee.com/involvex"
+                class="btn btn-sponsor btn-buy-coffee"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"
+                  />
+                  <line x1="6" y1="1" x2="6" y2="4" />
+                  <line x1="10" y1="1" x2="10" y2="4" />
+                  <line x1="14" y1="1" x2="14" y2="4" />
+                </svg>
+                Buy Me a Coffee
+              </a>
+              <a
+                href="https://paypal.me/involvex"
+                class="btn btn-sponsor btn-paypal"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106z"
+                  />
+                </svg>
+                PayPal
+              </a>
+            </div>
           </div>
           <div class="footer-links">
             <div class="footer-column">
@@ -1161,10 +1309,18 @@ bun run typecheck</code></pre>
                 </li>
                 <li>
                   <a
-                    href="https://github.com/sponsors/involvex"
+                    href="https://github.com/involvex/super-agent-cli/discussions"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >Sponsor</a
+                    >Discussions</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://rewards.bing.com/welcome?rh=14525F68&ref=rafsrchae&form=ML2XE3&OCID=ML2XE3&PUBL=RewardsDO&CREA=ML2XE3"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Bing Rewards</a
                   >
                 </li>
               </ul>

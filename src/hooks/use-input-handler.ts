@@ -180,9 +180,19 @@ export function useInputHandler({
         setShowCommandPalette(false);
         return true;
       }
-      // Capture typing for palette query
-      if (key.sequence && !key.ctrl && !key.meta && key.sequence.length === 1) {
-        setCommandPaletteQuery(prev => prev + key.sequence);
+      // Capture typing for palette query - use char instead of sequence
+      if (
+        char &&
+        char.length === 1 &&
+        !key.ctrl &&
+        !key.meta &&
+        !key.escape &&
+        !key.return &&
+        !key.tab &&
+        !key.upArrow &&
+        !key.downArrow
+      ) {
+        setCommandPaletteQuery(prev => prev + char);
         setSelectedPaletteIndex(0);
         return true;
       }
