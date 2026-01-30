@@ -11,14 +11,12 @@ import {
   getMCPManager,
   initializeMCPServers,
 } from "../core/tools";
-import {
-  SuperAgentClient,
-  SuperAgentMessage,
-  SuperAgentToolCall,
-} from "../core/client";
+import { LLMMessage, LLMProvider, LLMToolCall } from "../core/llm-provider";
 import { createTokenCounter, TokenCounter } from "../utils/token-counter";
 import { loadCustomInstructions } from "../utils/custom-instructions";
 import { getSettingsManager } from "../utils/settings-manager";
+import { OpenAIProvider } from "../core/providers/openai";
+import { GrokProvider } from "../core/providers/grok";
 import { loadMCPConfig } from "../mcp/config";
 import { ToolResult } from "../types";
 import { EventEmitter } from "events";
@@ -27,8 +25,8 @@ export interface ChatEntry {
   type: "user" | "assistant" | "tool_result" | "tool_call";
   content: string;
   timestamp: Date;
-  toolCalls?: SuperAgentToolCall[];
-  toolCall?: SuperAgentToolCall;
+  toolCalls?: LLMToolCall[];
+  toolCall?: LLMToolCall;
   toolResult?: { success: boolean; output?: string; error?: string };
   isStreaming?: boolean;
 }
@@ -36,14 +34,14 @@ export interface ChatEntry {
 export interface StreamingChunk {
   type: "content" | "tool_calls" | "tool_result" | "done" | "token_count";
   content?: string;
-  toolCalls?: SuperAgentToolCall[];
-  toolCall?: SuperAgentToolCall;
+  toolCalls?: LLMToolCall[];
+  toolCall?: LLMToolCall;
   toolResult?: ToolResult;
   tokenCount?: number;
 }
 
 export class SuperAgent extends EventEmitter {
-  private superAgentClient: SuperAgentClient;
+  private superAgentClient: LLMProvider;
   private textEditor: TextEditorTool;
   private morphEditor: MorphEditorTool | null;
   private bash: BashTool;
@@ -51,7 +49,7 @@ export class SuperAgent extends EventEmitter {
   private confirmationTool: ConfirmationTool;
   private search: SearchTool;
   private chatHistory: ChatEntry[] = [];
-  private messages: SuperAgentMessage[] = [];
+  private messages: LLMMessage[] = [];
   private tokenCounter: TokenCounter;
   private abortController: AbortController | null = null;
   private mcpInitialized: boolean = false;
@@ -65,10 +63,21 @@ export class SuperAgent extends EventEmitter {
   ) {
     super();
     const manager = getSettingsManager();
+    const settings = manager.loadUserSettings();
     const savedModel = manager.getCurrentModel();
+    const activeProvider = settings.active_provider;
+
     const modelToUse = model || savedModel || "grok-code-fast-1";
     this.maxToolRounds = maxToolRounds || 400;
-    this.superAgentClient = new SuperAgentClient(apiKey, modelToUse, baseURL);
+
+    // Instantiate appropriate provider
+    if (activeProvider === "openai") {
+      this.superAgentClient = new OpenAIProvider(apiKey, baseURL, modelToUse);
+    } else {
+      // Default to grok
+      this.superAgentClient = new GrokProvider(apiKey, baseURL, modelToUse);
+    }
+
     this.textEditor = new TextEditorTool();
     this.morphEditor = process.env.MORPH_API_KEY ? new MorphEditorTool() : null;
     this.bash = new BashTool();
@@ -89,7 +98,7 @@ export class SuperAgent extends EventEmitter {
     // Initialize with system message
     this.messages.push({
       role: "system",
-      content: `You are Grok CLI, an AI assistant that helps with file editing, coding tasks, and system operations.${customInstructionsSection}
+      content: `You are Super Agent CLI, an AI assistant that helps with file editing, coding tasks, and system operations.${customInstructionsSection}
 
 You have access to these tools:
 - view_file: View file contents or directory listings
@@ -170,8 +179,8 @@ Current working directory: ${process.cwd()}`,
   }
 
   private isGrokModel(): boolean {
-    const currentModel = this.superAgentClient.getCurrentModel();
-    return currentModel.toLowerCase().includes("grok");
+    // If provider is grok or model name contains grok
+    return this.superAgentClient.name === "grok";
   }
 
   // Heuristic: enable web search only when likely needed
@@ -217,26 +226,25 @@ Current working directory: ${process.cwd()}`,
     this.messages.push({ role: "user", content: message });
 
     const newEntries: ChatEntry[] = [userEntry];
-    const maxToolRounds = this.maxToolRounds; // Prevent infinite loops
+    const maxToolRounds = this.maxToolRounds;
     let toolRounds = 0;
 
     try {
       const tools = await getAllSuperAgentTools();
-      let currentResponse = await this.superAgentClient.chat(
-        this.messages,
-        tools,
-        undefined,
-        this.isGrokModel() && this.shouldUseSearchFor(message)
-          ? { search_parameters: { mode: "auto" } }
-          : { search_parameters: { mode: "off" } },
-      );
+      let currentResponse = await this.superAgentClient.chat(this.messages, {
+        tools: tools as any,
+        search_parameters:
+          this.isGrokModel() && this.shouldUseSearchFor(message)
+            ? { mode: "auto" }
+            : { mode: "off" },
+      });
 
       // Agent loop - continue until no more tool calls or max rounds reached
       while (toolRounds < maxToolRounds) {
         const assistantMessage = currentResponse.choices[0]?.message;
 
         if (!assistantMessage) {
-          throw new Error("No response from Grok");
+          throw new Error("No response from provider");
         }
 
         // Handle tool calls
@@ -319,14 +327,13 @@ Current working directory: ${process.cwd()}`,
           }
 
           // Get next response - this might contain more tool calls
-          currentResponse = await this.superAgentClient.chat(
-            this.messages,
-            tools,
-            undefined,
-            this.isGrokModel() && this.shouldUseSearchFor(message)
-              ? { search_parameters: { mode: "auto" } }
-              : { search_parameters: { mode: "off" } },
-          );
+          currentResponse = await this.superAgentClient.chat(this.messages, {
+            tools: tools as any,
+            search_parameters:
+              this.isGrokModel() && this.shouldUseSearchFor(message)
+                ? { mode: "auto" }
+                : { mode: "off" },
+          });
         } else {
           // No more tool calls, add final response
           const finalEntry: ChatEntry = {
@@ -425,7 +432,7 @@ Current working directory: ${process.cwd()}`,
       tokenCount: inputTokens,
     };
 
-    const maxToolRounds = this.maxToolRounds; // Prevent infinite loops
+    const maxToolRounds = this.maxToolRounds;
     let toolRounds = 0;
     let totalOutputTokens = 0;
     let lastTokenUpdate = 0;
@@ -445,14 +452,13 @@ Current working directory: ${process.cwd()}`,
 
         // Stream response and accumulate
         const tools = await getAllSuperAgentTools();
-        const stream = this.superAgentClient.chatStream(
-          this.messages,
-          tools,
-          undefined,
-          this.isGrokModel() && this.shouldUseSearchFor(message)
-            ? { search_parameters: { mode: "auto" } }
-            : { search_parameters: { mode: "off" } },
-        );
+        const stream = this.superAgentClient.chatStream(this.messages, {
+          tools: tools as any,
+          search_parameters:
+            this.isGrokModel() && this.shouldUseSearchFor(message)
+              ? { mode: "auto" }
+              : { mode: "off" },
+        });
         let accumulatedMessage: any = {};
         let accumulatedContent = "";
         let toolCallsYielded = false;
@@ -644,7 +650,7 @@ Current working directory: ${process.cwd()}`,
     }
   }
 
-  private async executeTool(toolCall: SuperAgentToolCall): Promise<ToolResult> {
+  private async executeTool(toolCall: LLMToolCall): Promise<ToolResult> {
     try {
       const args = JSON.parse(toolCall.function.arguments);
 
@@ -722,9 +728,7 @@ Current working directory: ${process.cwd()}`,
     }
   }
 
-  private async executeMCPTool(
-    toolCall: SuperAgentToolCall,
-  ): Promise<ToolResult> {
+  private async executeMCPTool(toolCall: LLMToolCall): Promise<ToolResult> {
     try {
       const args = JSON.parse(toolCall.function.arguments);
       const mcpManager = getMCPManager();

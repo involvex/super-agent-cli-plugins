@@ -13,7 +13,7 @@ A conversational AI CLI tool powered by Super Agent with intelligent text editor
 - **🚀 Morph Fast Apply**: Optional high-speed code editing at 4,500+ tokens/sec with 98% accuracy
 - **🔌 MCP Tools**: Extend capabilities with Model Context Protocol servers (Linear, GitHub, etc.)
 - **💬 Interactive UI**: Beautiful terminal interface built with Ink
-- **🌍 Global Installation**: Install and use anywhere with `bun add -g @vibe-kit/super-agent-cli`
+- **🌍 Global Installation**: Install and use anywhere with `bun add -g @involvex/super-agent-cli`
 
 ## Installation
 
@@ -25,24 +25,6 @@ Or with npm (fallback):
 
 npm install -g @involvex/super-agent-cli
 
-## Setup
-
-1. Get your Super Agent API key from [X.AI](https://x.ai)
-
-2. Set up your API key (choose one method):
-
-**Method 1: Environment Variable**
-
-```bash
-export SUPER_AGENT_API_KEY=your_api_key_here
-```
-
-**Method 2: .env File**
-
-````bash
-cp .env.example .env
-{
-
 ## Configuration Files
 
 Super Agent CLI uses two types of configuration files to manage settings:
@@ -53,25 +35,26 @@ This file stores **global settings** that apply across all projects. These setti
 
 - **API Key**: Your Super Agent API key
 - **Base URL**: Custom API endpoint (if needed)
-- **Default Model**: Your preferred model (e.g., `super-agent-code-fast-1`)
+- **Default Model**: Your preferred model (e.g., `gemini-3.0-flash`)
 - **Available Models**: List of models you can use
 
 **Example:**
 
 ```json
 {
-  "apiKey": "your_api_key_here",
-  "baseURL": "https://api.x.ai/v1",
-  "defaultModel": "super-agent-code-fast-1",
-  "models": [
-    "super-agent-code-fast-1",
-    "super-agent-4-latest",
-    "super-agent-3-latest",
-    "super-agent-3-fast",
-    "super-agent-3-mini-fast"
-  ]
+  "active_provider": "gemini",
+  "providers": {
+    "gemini": {
+      "id": "gemini",
+      "provider": "gemini",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    }
+  }
 }
-````
+```
 
 ### Project-Level Settings (`.super-agent/settings.json`)
 
@@ -84,7 +67,17 @@ This file stores **project-specific settings** in your current working directory
 
 ```json
 {
-  "model": "super-agent-3-fast",
+  "active_provider": "gemini",
+  "providers": {
+    "gemini": {
+      "id": "gemini",
+      "provider": "gemini",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    }
+  },
   "mcpServers": {
     "linear": {
       "name": "linear",
@@ -101,7 +94,7 @@ This file stores **project-specific settings** in your current working directory
 1. **Global Defaults**: User-level settings provide your default preferences
 2. **Project Override**: Project-level settings override defaults for specific projects
 3. **Directory-Specific**: When you change directories, project settings are loaded automatically
-4. **Fallback Logic**: Project model → User default model → System default (`super-agent-code-fast-1`)
+4. **Fallback Logic**: Project model → User default model → System default (`gemini-3-pro-preview`)
 
 This means you can have different models for different projects while maintaining consistent global settings like your API key.
 
@@ -111,7 +104,7 @@ This means you can have different models for different projects while maintainin
 
 **Popular Providers**:
 
-- **X.AI (Super Agent)**: `https://api.x.ai/v1` (default)
+- **Google (Gemini)**: `https://generativelanguage.googleapis.com/v1beta/openai` (default)
 - **OpenAI**: `https://api.openai.com/v1`
 - **OpenRouter**: `https://openrouter.ai/api/v1`
 - **Groq**: `https://api.groq.com/openai/v1`
@@ -139,6 +132,10 @@ Start the conversational AI assistant:
 
 ```bash
 super-agent
+# or
+super-agent about
+# or
+super-agent plugins list
 ```
 
 Or specify a working directory:
@@ -189,35 +186,18 @@ super-agent git commit-and-push --max-tool-rounds 30  # Git commands
 
 ### Model Selection
 
-You can specify which AI model to use with the `--model` parameter or `SUPER_AGENT_MODEL` environment variable:
+You can specify which AI model to use with the `--model` parameter
 
-**Method 1: Command Line Flag**
-
-```bash
 # Use Super Agent models
-super-agent --model super-agent-code-fast-1
-super-agent --model super-agent-4-latest
-super-agent --model super-agent-3-latest
-super-agent --model super-agent-3-fast
 
-# Use other models (with appropriate API endpoint)
-super-agent --model gemini-2.5-pro --base-url https://api-endpoint.com/v1
-super-agent --model claude-sonnet-4-20250514 --base-url https://api-endpoint.com/v1
-```
+super-agent --model gemini-3-pro-preview
+super-agent --model gemini-2.5-pro
+super-agent --model gemini-2.5-flash
 
-**Method 2: Environment Variable**
-
-```bash
-export SUPER_AGENT_MODEL=super-agent-code-fast-1
-super-agent
-```
-
-**Method 3: User Settings File**
+**Method 2: User Settings File**
 Add to `~/.super-agent/settings.json`:
 
-````
-
-**Model Priority**: `--model` flag > `SUPER_AGENT_MODEL` environment variable > user default model > system default (super-agent-code-fast-1)
+**Model Priority**: `--model` flag > user default model > system default (gemini-3-pro-preview)
 
 ### Command Line Options
 
@@ -233,7 +213,13 @@ Options:
   -p, --prompt <prompt>  process a single prompt and exit (headless mode)
   --max-tool-rounds <rounds>  maximum number of tool execution rounds (default: 400)
   -h, --help             display help for command
-````
+
+Commands:
+  about                                      Show information about the Super Agent CLI
+  plugins list/install/uninstall <name/path> Manage plugins for Super Agent CLI
+  git                                        Git operations with AI assistance
+  mcp                                        Manage MCP servers
+```
 
 ### Custom Instructions
 
@@ -288,37 +274,6 @@ Super Agent will load custom instructions in the following priority order:
 If both files exist, project instructions will be used. If neither exists, Super Agent operates with its default behavior.
 
 The custom instructions are added to Super Agent's system prompt and influence its responses across all interactions in the respective context.
-
-## Morph Fast Apply (Optional)
-
-Super Agent CLI supports Morph's Fast Apply model for high-speed code editing at **4,500+ tokens/sec with 98% accuracy**. This is an optional feature that provides lightning-fast file editing capabilities.
-
-**Setup**: Configure your Morph API key following the [setup instructions](#setup) above.
-
-### How It Works
-
-When `MORPH_API_KEY` is configured:
-
-- **`edit_file` tool becomes available** alongside the standard `str_replace_editor`
-- **Optimized for complex edits**: Use for multi-line changes, refactoring, and large modifications
-- **Intelligent editing**: Uses abbreviated edit format with `// ... existing code ...` comments
-- **Fallback support**: Standard tools remain available if Morph is unavailable
-
-**When to use each tool:**
-
-- **`edit_file`** (Morph): Complex edits, refactoring, multi-line changes
-- **`str_replace_editor`**: Simple text replacements, single-line edits
-
-### Example Usage
-
-With Morph Fast Apply configured, you can request complex code changes:
-
-```bash
-super-agent --prompt "refactor this function to use async/await and add error handling"
-super-agent -p "convert this class to TypeScript and add proper type annotations"
-```
-
-The AI will automatically choose between `edit_file` (Morph) for complex changes or `str_replace_editor` for simple replacements.
 
 ## MCP Tools
 
