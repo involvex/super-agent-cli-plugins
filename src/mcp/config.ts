@@ -1,5 +1,7 @@
 import { getSettingsManager } from "../utils/settings-manager";
 import { MCPServerConfig } from "./client";
+import * as path from "path";
+import * as fs from "fs";
 
 export interface MCPConfig {
   servers: MCPServerConfig[];
@@ -11,9 +13,43 @@ export interface MCPConfig {
 export function loadMCPConfig(): MCPConfig {
   const manager = getSettingsManager();
   const projectSettings = manager.loadProjectSettings();
-  const servers = projectSettings.mcpServers
+
+  // Start with servers from project settings
+  const servers: MCPServerConfig[] = projectSettings.mcpServers
     ? (Object.values(projectSettings.mcpServers) as MCPServerConfig[])
     : [];
+
+  // Look for .mcp.json in current directory
+  const mcpJsonPath = path.join(process.cwd(), ".mcp.json");
+  if (fs.existsSync(mcpJsonPath)) {
+    try {
+      const mcpJsonConfig = JSON.parse(fs.readFileSync(mcpJsonPath, "utf-8"));
+      if (mcpJsonConfig.mcpServers) {
+        // Merge definition from .mcp.json, overriding likely named servers
+        const projectServerNames = new Set(servers.map(s => s.name));
+
+        for (const [name, config] of Object.entries(mcpJsonConfig.mcpServers)) {
+          // Normalize format if needed. Assuming .mcp.json matches standard format
+          // but mapped by key.
+          const serverConfig = config as MCPServerConfig;
+          serverConfig.name = name; // Ensure name is set
+
+          if (!projectServerNames.has(name)) {
+            servers.push(serverConfig);
+          } else {
+            // Update existing
+            const index = servers.findIndex(s => s.name === name);
+            if (index !== -1) {
+              servers[index] = serverConfig;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to load .mcp.json:", error);
+    }
+  }
+
   return { servers };
 }
 

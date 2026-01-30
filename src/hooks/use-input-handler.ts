@@ -11,6 +11,7 @@ import { useInput } from "ink";
 
 import { filterCommandSuggestions } from "../ui/components/command-suggestions";
 import { loadModelConfig, updateCurrentModel } from "../utils/model-config";
+import { getMCPManager, initializeMCPServers } from "../core/tools";
 import { getSettingsManager } from "../utils/settings-manager";
 import { getChatManager } from "../utils/chat-manager";
 import * as fs from "fs-extra";
@@ -475,6 +476,10 @@ export function useInputHandler({
     { command: "/chat load <name>", description: "Load a saved chat" },
     { command: "/chat list", description: "List saved chats" },
     { command: "/chat delete <name>", description: "Delete a saved chat" },
+    {
+      command: "/mcp <action>",
+      description: "Manage MCP servers (list, add, remove, reload)",
+    },
     { command: "/commit-and-push", description: "AI commit & push to remote" },
     { command: "/exit", description: "Exit the application" },
   ];
@@ -744,6 +749,103 @@ Available models: ${modelNames.join(", ")}`,
             timestamp: new Date(),
           },
         ]);
+      }
+      clearInput();
+      return true;
+    }
+
+    if (trimmedInput.startsWith("/mcp ")) {
+      const args = trimmedInput.replace("/mcp ", "").split(" ");
+      const action = args[0];
+      const mcpManager = getMCPManager();
+
+      try {
+        if (action === "list") {
+          const servers = mcpManager.getServers();
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `Active MCP Servers:\n${servers.length ? servers.map(s => `- ${s}`).join("\n") : "No active servers."}`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "reload") {
+          setIsProcessing(true);
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: "Reloading MCP servers...",
+              timestamp: new Date(),
+            },
+          ]);
+          await mcpManager.shutdown();
+          await initializeMCPServers();
+          setIsProcessing(false);
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: "✓ MCP servers reloaded.",
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "add") {
+          // Usage: /mcp add <name> <command> [args...]
+          if (args.length < 3) {
+            throw new Error("Usage: /mcp add <name> <command> [args...]");
+          }
+          const name = args[1];
+          const command = args[2];
+          const commandArgs = args.slice(3);
+
+          await mcpManager.addServer({
+            name,
+            transport: {
+              type: "stdio",
+              command,
+              args: commandArgs,
+            },
+          });
+
+          // Also persist? The current addServer doesn't persist to .mcp.json automatically
+          // Use config.ts logic if persistence is desired. For now, runtime only or via manual config edit
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `✓ Added MCP server '${name}'.`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "remove") {
+          const name = args[1];
+          if (!name) {
+            throw new Error("Usage: /mcp remove <name>");
+          }
+          await mcpManager.removeServer(name);
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `✓ Removed MCP server '${name}'.`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else {
+          throw new Error(`Unknown MCP action: ${action}`);
+        }
+      } catch (error: any) {
+        setChatHistory(prev => [
+          ...prev,
+          {
+            type: "assistant",
+            content: `❌ MCP Error: ${error.message}`,
+            timestamp: new Date(),
+          },
+        ]);
+        setIsProcessing(false);
       }
       clearInput();
       return true;
