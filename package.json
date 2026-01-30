@@ -1,38 +1,41 @@
 {
-  "name": "@vibe-kit/grok-cli",
+  "name": "@involvex/super-agent-cli",
   "version": "0.0.34",
-  "description": "An open-source AI agent that brings the power of Grok directly into your terminal.",
-  "type": "module",
-  "main": "dist/index.js",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "bin": {
-    "grok": "dist/index.js"
-  },
-  "scripts": {
-    "build": "tsc",
-    "build:bun": "bun run tsc",
-    "dev": "bun run src/index.ts",
-    "dev:node": "tsx src/index.ts",
-    "start": "node dist/index.js",
-    "start:bun": "bun run dist/index.js",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "typecheck": "tsc --noEmit",
-    "install:bun": "bun install"
-  },
+  "description": "An open-source AI agent that brings the power of Super Agent directly into your terminal.",
   "keywords": [
     "cli",
     "agent",
     "text-editor",
-    "grok",
     "ai"
   ],
-  "author": "Your Name",
   "license": "MIT",
+  "author": "InvolveX",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "dist/index.js",
+  "bin": {
+    "super-agent": "dist/index.js"
+  },
+  "scripts": {
+    "prebuild": "bun run format && bun run lint:fix && bun run typecheck",
+    "build": "tsc",
+    "build:bun": "bun run tsc",
+    "dev": "bun run src/index.ts",
+    "dev:node": "tsx src/index.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "install:bun": "bun install",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "start": "node dist/index.js",
+    "start:bun": "bun run dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
     "axios": "^1.7.0",
@@ -57,8 +60,13 @@
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
     "eslint": "^9.31.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "prettier-plugin-packagejson": "^3.0.0",
+    "prettier-plugin-sort-imports": "^1.8.9",
     "tsx": "^4.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.54.0"
   },
   "engines": {
     "node": ">=18.0.0"

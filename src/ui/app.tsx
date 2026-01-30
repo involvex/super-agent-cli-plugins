@@ -1,22 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import { Agent } from '../agent/index.js';
-import { ToolResult } from '../types/index.js';
-import { ConfirmationService, ConfirmationOptions } from '../utils/confirmation-service.js';
-import ConfirmationDialog from './components/confirmation-dialog.js';
-import chalk from 'chalk';
+import {
+  ConfirmationService,
+  ConfirmationOptions,
+} from "../utils/confirmation-service";
+import ConfirmationDialog from "./components/confirmation-dialog";
+import React, { useState, useEffect } from "react";
+import { ToolResult } from "../types/index";
+import { Box, Text, useInput } from "ink";
+import { Agent } from "../agent/index";
+import chalk from "chalk";
 
 interface Props {
   agent: Agent;
 }
 
 export default function App({ agent }: Props) {
-  const [input, setInput] = useState('');
-  const [history, setHistory] = useState<Array<{ command: string; result: ToolResult }>>([]);
+  const [input, setInput] = useState("");
+  const [history, setHistory] = useState<
+    Array<{ command: string; result: ToolResult }>
+  >([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [confirmationOptions, setConfirmationOptions] = useState<ConfirmationOptions | null>(null);
+  const [confirmationOptions, setConfirmationOptions] =
+    useState<ConfirmationOptions | null>(null);
   // Removed useApp().exit - using process.exit(0) instead for better terminal handling
-  
+
   const confirmationService = ConfirmationService.getInstance();
 
   useEffect(() => {
@@ -24,10 +30,13 @@ export default function App({ agent }: Props) {
       setConfirmationOptions(options);
     };
 
-    confirmationService.on('confirmation-requested', handleConfirmationRequest);
+    confirmationService.on("confirmation-requested", handleConfirmationRequest);
 
     return () => {
-      confirmationService.off('confirmation-requested', handleConfirmationRequest);
+      confirmationService.off(
+        "confirmation-requested",
+        handleConfirmationRequest,
+      );
     };
   }, [confirmationService]);
 
@@ -41,22 +50,20 @@ export default function App({ agent }: Props) {
     if (confirmationOptions) {
       return;
     }
-    if (key.ctrl && inputChar === 'c') {
+    if (key.ctrl && inputChar === "c") {
       process.exit(0);
-      return;
     }
 
     if (key.return) {
-      if (input.trim() === 'exit' || input.trim() === 'quit') {
+      if (input.trim() === "exit" || input.trim() === "quit") {
         process.exit(0);
-        return;
       }
 
       if (input.trim()) {
         setIsProcessing(true);
         const result = await agent.processCommand(input.trim());
         setHistory(prev => [...prev, { command: input.trim(), result }]);
-        setInput('');
+        setInput("");
         setIsProcessing(false);
       }
       return;
@@ -124,13 +131,14 @@ export default function App({ agent }: Props) {
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
         <Text bold color="cyan">
-          🔧 Grok CLI - Text Editor Agent
+          🔧 @involvex/super-agent-cli- Text Editor Agent
         </Text>
       </Box>
-      
+
       <Box flexDirection="column" marginBottom={1}>
         <Text dimColor>
-          Available commands: view, str_replace, create, insert, undo_edit, bash, help
+          Available commands: view, str_replace, create, insert, undo_edit,
+          bash, help
         </Text>
         <Text dimColor>
           Type 'help' for detailed usage, 'exit' or Ctrl+C to quit

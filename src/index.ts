@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import React from "react";
-import { render } from "ink";
+import type { ChatCompletionMessageParam } from "openai/resources/chat";
+import { ConfirmationService } from "./utils/confirmation-service.ts";
+import { getSettingsManager } from "./utils/settings-manager.ts";
+import ChatInterface from "./ui/components/chat-interface.ts";
+import { createMCPCommand } from "./commands/mcp.ts";
+import { GrokAgent } from "./agent/grok-agent.ts";
 import { program } from "commander";
 import * as dotenv from "dotenv";
-import { GrokAgent } from "./agent/grok-agent.js";
-import ChatInterface from "./ui/components/chat-interface.js";
-import { getSettingsManager } from "./utils/settings-manager.js";
-import { ConfirmationService } from "./utils/confirmation-service.js";
-import { createMCPCommand } from "./commands/mcp.js";
-import type { ChatCompletionMessageParam } from "openai/resources/chat";
+import { render } from "ink";
+import React from "react";
 
 // Load environment variables
 dotenv.config();
@@ -30,7 +30,7 @@ process.on("SIGTERM", () => {
 });
 
 // Handle uncaught exceptions to prevent hanging
-process.on("uncaughtException", (error) => {
+process.on("uncaughtException", error => {
   console.error("Uncaught exception:", error);
   process.exit(1);
 });
@@ -66,7 +66,7 @@ function loadBaseURL(): string {
 // Save command line settings to user settings file
 async function saveCommandLineSettings(
   apiKey?: string,
-  baseURL?: string
+  baseURL?: string,
 ): Promise<void> {
   try {
     const manager = getSettingsManager();
@@ -83,7 +83,7 @@ async function saveCommandLineSettings(
   } catch (error) {
     console.warn(
       "⚠️ Could not save settings to file:",
-      error instanceof Error ? error.message : "Unknown error"
+      error instanceof Error ? error.message : "Unknown error",
     );
   }
 }
@@ -111,7 +111,7 @@ async function handleCommitAndPushHeadless(
   apiKey: string,
   baseURL?: string,
   model?: string,
-  maxToolRounds?: number
+  maxToolRounds?: number,
 ): Promise<void> {
   try {
     const agent = new GrokAgent(apiKey, baseURL, model, maxToolRounds);
@@ -125,7 +125,7 @@ async function handleCommitAndPushHeadless(
 
     // First check if there are any changes at all
     const initialStatusResult = await agent.executeBashCommand(
-      "git status --porcelain"
+      "git status --porcelain",
     );
 
     if (!initialStatusResult.success || !initialStatusResult.output?.trim()) {
@@ -140,7 +140,7 @@ async function handleCommitAndPushHeadless(
 
     if (!addResult.success) {
       console.log(
-        `❌ git add: ${addResult.error || "Failed to stage changes"}`
+        `❌ git add: ${addResult.error || "Failed to stage changes"}`,
       );
       process.exit(1);
     }
@@ -192,7 +192,7 @@ Respond with ONLY the commit message, no additional text.`;
       console.log(
         `✅ git commit: ${
           commitResult.output?.split("\n")[0] || "Commit successful"
-        }`
+        }`,
       );
 
       // If commit was successful, push to remote
@@ -211,7 +211,7 @@ Respond with ONLY the commit message, no additional text.`;
         console.log(
           `✅ git push: ${
             pushResult.output?.split("\n")[0] || "Push successful"
-          }`
+          }`,
         );
       } else {
         console.log(`❌ git push: ${pushResult.error || "Push failed"}`);
@@ -233,7 +233,7 @@ async function processPromptHeadless(
   apiKey: string,
   baseURL?: string,
   model?: string,
-  maxToolRounds?: number
+  maxToolRounds?: number,
 ): Promise<void> {
   try {
     const agent = new GrokAgent(apiKey, baseURL, model, maxToolRounds);
@@ -265,7 +265,7 @@ async function processPromptHeadless(
 
           // Add tool calls if present
           if (entry.toolCalls && entry.toolCalls.length > 0) {
-            assistantMessage.tool_calls = entry.toolCalls.map((toolCall) => ({
+            assistantMessage.tool_calls = entry.toolCalls.map(toolCall => ({
               id: toolCall.id,
               type: "function",
               function: {
@@ -300,7 +300,7 @@ async function processPromptHeadless(
       JSON.stringify({
         role: "assistant",
         content: `Error: ${error.message}`,
-      })
+      }),
     );
     process.exit(1);
   }
@@ -309,7 +309,7 @@ async function processPromptHeadless(
 program
   .name("grok")
   .description(
-    "A conversational AI CLI tool powered by Grok with text editor capabilities"
+    "A conversational AI CLI tool powered by Grok with text editor capabilities",
   )
   .version("1.0.1")
   .argument("[message...]", "Initial message to send to Grok")
@@ -317,20 +317,20 @@ program
   .option("-k, --api-key <key>", "Grok API key (or set GROK_API_KEY env var)")
   .option(
     "-u, --base-url <url>",
-    "Grok API base URL (or set GROK_BASE_URL env var)"
+    "Grok API base URL (or set GROK_BASE_URL env var)",
   )
   .option(
     "-m, --model <model>",
-    "AI model to use (e.g., grok-code-fast-1, grok-4-latest) (or set GROK_MODEL env var)"
+    "AI model to use (e.g., grok-code-fast-1, grok-4-latest) (or set GROK_MODEL env var)",
   )
   .option(
     "-p, --prompt <prompt>",
-    "process a single prompt and exit (headless mode)"
+    "process a single prompt and exit (headless mode)",
   )
   .option(
     "--max-tool-rounds <rounds>",
     "maximum number of tool execution rounds (default: 400)",
-    "400"
+    "400",
   )
   .action(async (message, options) => {
     if (options.directory) {
@@ -339,7 +339,7 @@ program
       } catch (error: any) {
         console.error(
           `Error changing directory to ${options.directory}:`,
-          error.message
+          error.message,
         );
         process.exit(1);
       }
@@ -354,7 +354,7 @@ program
 
       if (!apiKey) {
         console.error(
-          "❌ Error: API key required. Set GROK_API_KEY environment variable, use --api-key flag, or set \"apiKey\" field in ~/.grok/user-settings.json"
+          '❌ Error: API key required. Set GROK_API_KEY environment variable, use --api-key flag, or set "apiKey" field in ~/.grok/user-settings.json',
         );
         process.exit(1);
       }
@@ -371,7 +371,7 @@ program
           apiKey,
           baseURL,
           model,
-          maxToolRounds
+          maxToolRounds,
         );
         return;
       }
@@ -406,25 +406,25 @@ gitCommand
   .option("-k, --api-key <key>", "Grok API key (or set GROK_API_KEY env var)")
   .option(
     "-u, --base-url <url>",
-    "Grok API base URL (or set GROK_BASE_URL env var)"
+    "Grok API base URL (or set GROK_BASE_URL env var)",
   )
   .option(
     "-m, --model <model>",
-    "AI model to use (e.g., grok-code-fast-1, grok-4-latest) (or set GROK_MODEL env var)"
+    "AI model to use (e.g., grok-code-fast-1, grok-4-latest) (or set GROK_MODEL env var)",
   )
   .option(
     "--max-tool-rounds <rounds>",
     "maximum number of tool execution rounds (default: 400)",
-    "400"
+    "400",
   )
-  .action(async (options) => {
+  .action(async options => {
     if (options.directory) {
       try {
         process.chdir(options.directory);
       } catch (error: any) {
         console.error(
           `Error changing directory to ${options.directory}:`,
-          error.message
+          error.message,
         );
         process.exit(1);
       }
@@ -439,7 +439,7 @@ gitCommand
 
       if (!apiKey) {
         console.error(
-          "❌ Error: API key required. Set GROK_API_KEY environment variable, use --api-key flag, or save to ~/.grok/user-settings.json"
+          "❌ Error: API key required. Set GROK_API_KEY environment variable, use --api-key flag, or save to ~/.grok/user-settings.json",
         );
         process.exit(1);
       }

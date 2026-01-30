@@ -1,8 +1,8 @@
+import { ConfirmationService } from "../utils/confirmation-service";
+import { ToolResult } from "../types/index";
 import { spawn } from "child_process";
-import { ToolResult } from "../types/index.js";
-import { ConfirmationService } from "../utils/confirmation-service.js";
-import fs from "fs-extra";
 import * as path from "path";
+import fs from "fs-extra";
 
 export interface SearchResult {
   file: string;
@@ -48,7 +48,7 @@ export class SearchTool {
       fileTypes?: string[];
       excludeFiles?: string[];
       includeHidden?: boolean;
-    } = {}
+    } = {},
   ): Promise<ToolResult> {
     try {
       const searchType = options.searchType || "both";
@@ -58,14 +58,14 @@ export class SearchTool {
       if (searchType === "text" || searchType === "both") {
         const textResults = await this.executeRipgrep(query, options);
         results.push(
-          ...textResults.map((r) => ({
+          ...textResults.map(r => ({
             type: "text" as const,
             file: r.file,
             line: r.line,
             column: r.column,
             text: r.text,
             match: r.match,
-          }))
+          })),
         );
       }
 
@@ -73,11 +73,11 @@ export class SearchTool {
       if (searchType === "files" || searchType === "both") {
         const fileResults = await this.findFilesByPattern(query, options);
         results.push(
-          ...fileResults.map((r) => ({
+          ...fileResults.map(r => ({
             type: "file" as const,
             file: r.path,
             score: r.score,
-          }))
+          })),
         );
       }
 
@@ -91,7 +91,7 @@ export class SearchTool {
       const formattedOutput = this.formatUnifiedResults(
         results,
         query,
-        searchType
+        searchType,
       );
 
       return {
@@ -120,7 +120,7 @@ export class SearchTool {
       maxResults?: number;
       fileTypes?: string[];
       excludeFiles?: string[];
-    }
+    },
   ): Promise<SearchResult[]> {
     return new Promise((resolve, reject) => {
       const args = [
@@ -154,7 +154,7 @@ export class SearchTool {
 
       // Add file type filters
       if (options.fileTypes) {
-        options.fileTypes.forEach((type) => {
+        options.fileTypes.forEach(type => {
           args.push("--type", type);
         });
       }
@@ -171,7 +171,7 @@ export class SearchTool {
 
       // Add exclude files
       if (options.excludeFiles) {
-        options.excludeFiles.forEach((file) => {
+        options.excludeFiles.forEach(file => {
           args.push("--glob", `!${file}`);
         });
       }
@@ -187,7 +187,7 @@ export class SearchTool {
         "--glob",
         "!.DS_Store",
         "--glob",
-        "!*.log"
+        "!*.log",
       );
 
       // Add query and search directory
@@ -197,15 +197,15 @@ export class SearchTool {
       let output = "";
       let errorOutput = "";
 
-      rg.stdout.on("data", (data) => {
+      rg.stdout.on("data", data => {
         output += data.toString();
       });
 
-      rg.stderr.on("data", (data) => {
+      rg.stderr.on("data", data => {
         errorOutput += data.toString();
       });
 
-      rg.on("close", (code) => {
+      rg.on("close", code => {
         if (code === 0 || code === 1) {
           // 0 = found, 1 = not found
           const results = this.parseRipgrepOutput(output);
@@ -215,7 +215,7 @@ export class SearchTool {
         }
       });
 
-      rg.on("error", (error) => {
+      rg.on("error", error => {
         reject(error);
       });
     });
@@ -229,7 +229,7 @@ export class SearchTool {
     const lines = output
       .trim()
       .split("\n")
-      .filter((line) => line.length > 0);
+      .filter(line => line.length > 0);
 
     for (const line of lines) {
       try {
@@ -262,20 +262,24 @@ export class SearchTool {
       maxResults?: number;
       includeHidden?: boolean;
       excludePattern?: string;
-    }
+    },
   ): Promise<FileSearchResult[]> {
     const files: FileSearchResult[] = [];
     const maxResults = options.maxResults || 50;
     const searchPattern = pattern.toLowerCase();
 
     const walkDir = async (dir: string, depth: number = 0): Promise<void> => {
-      if (depth > 10 || files.length >= maxResults) return; // Prevent infinite recursion and limit results
+      if (depth > 10 || files.length >= maxResults) {
+        return;
+      } // Prevent infinite recursion and limit results
 
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true });
 
         for (const entry of entries) {
-          if (files.length >= maxResults) break;
+          if (files.length >= maxResults) {
+            break;
+          }
 
           const fullPath = path.join(dir, entry.name);
           const relativePath = path.relative(this.currentDirectory, fullPath);
@@ -314,7 +318,7 @@ export class SearchTool {
             const score = this.calculateFileScore(
               entry.name,
               relativePath,
-              searchPattern
+              searchPattern,
             );
             if (score > 0) {
               files.push({
@@ -344,17 +348,23 @@ export class SearchTool {
   private calculateFileScore(
     fileName: string,
     filePath: string,
-    pattern: string
+    pattern: string,
   ): number {
     const lowerFileName = fileName.toLowerCase();
     const lowerFilePath = filePath.toLowerCase();
 
     // Exact matches get highest score
-    if (lowerFileName === pattern) return 100;
-    if (lowerFileName.includes(pattern)) return 80;
+    if (lowerFileName === pattern) {
+      return 100;
+    }
+    if (lowerFileName.includes(pattern)) {
+      return 80;
+    }
 
     // Path matches get medium score
-    if (lowerFilePath.includes(pattern)) return 60;
+    if (lowerFilePath.includes(pattern)) {
+      return 60;
+    }
 
     // Fuzzy matching - check if all characters of pattern exist in order
     let patternIndex = 0;
@@ -382,7 +392,7 @@ export class SearchTool {
   private formatUnifiedResults(
     results: UnifiedSearchResult[],
     query: string,
-    searchType: string
+    searchType: string,
   ): string {
     if (results.length === 0) {
       return `No results found for "${query}"`;
@@ -391,19 +401,19 @@ export class SearchTool {
     let output = `Search results for "${query}":\n`;
 
     // Separate text and file results
-    const textResults = results.filter((r) => r.type === "text");
-    const fileResults = results.filter((r) => r.type === "file");
+    const textResults = results.filter(r => r.type === "text");
+    const fileResults = results.filter(r => r.type === "file");
 
     // Show all unique files (from both text matches and file matches)
     const allFiles = new Set<string>();
 
     // Add files from text results
-    textResults.forEach((result) => {
+    textResults.forEach(result => {
       allFiles.add(result.file);
     });
 
     // Add files from file search results
-    fileResults.forEach((result) => {
+    fileResults.forEach(result => {
       allFiles.add(result.file);
     });
 
@@ -411,9 +421,9 @@ export class SearchTool {
     const displayLimit = 8;
 
     // Show files in compact format
-    fileList.slice(0, displayLimit).forEach((file) => {
+    fileList.slice(0, displayLimit).forEach(file => {
       // Count matches in this file for text results
-      const matchCount = textResults.filter((r) => r.file === file).length;
+      const matchCount = textResults.filter(r => r.file === file).length;
       const matchIndicator = matchCount > 0 ? ` (${matchCount} matches)` : "";
       output += `  ${file}${matchIndicator}\n`;
     });

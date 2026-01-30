@@ -1,7 +1,12 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import {
+  createTransport,
+  MCPTransport,
+  TransportType,
+  TransportConfig,
+} from "./transports";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { EventEmitter } from "events";
-import { createTransport, MCPTransport, TransportType, TransportConfig } from "./transports.js";
 
 export interface MCPServerConfig {
   name: string;
@@ -30,15 +35,15 @@ export class MCPManager extends EventEmitter {
       let transportConfig = config.transport;
       if (!transportConfig && config.command) {
         transportConfig = {
-          type: 'stdio',
+          type: "stdio",
           command: config.command,
           args: config.args,
-          env: config.env
+          env: config.env,
         };
       }
 
       if (!transportConfig) {
-        throw new Error('Transport configuration is required');
+        throw new Error("Transport configuration is required");
       }
 
       // Create transport
@@ -49,13 +54,13 @@ export class MCPManager extends EventEmitter {
       const client = new Client(
         {
           name: "grok-cli",
-          version: "1.0.0"
+          version: "1.0.0",
         },
         {
           capabilities: {
-            tools: {}
-          }
-        }
+            tools: {},
+          },
+        },
       );
 
       this.clients.set(config.name, client);
@@ -66,21 +71,21 @@ export class MCPManager extends EventEmitter {
 
       // List available tools
       const toolsResult = await client.listTools();
-      
+
       // Register tools
       for (const tool of toolsResult.tools) {
         const mcpTool: MCPTool = {
           name: `mcp__${config.name}__${tool.name}`,
           description: tool.description || `Tool from ${config.name} server`,
           inputSchema: tool.inputSchema,
-          serverName: config.name
+          serverName: config.name,
         };
         this.tools.set(mcpTool.name, mcpTool);
       }
 
-      this.emit('serverAdded', config.name, toolsResult.tools.length);
+      this.emit("serverAdded", config.name, toolsResult.tools.length);
     } catch (error) {
-      this.emit('serverError', config.name, error);
+      this.emit("serverError", config.name, error);
       throw error;
     }
   }
@@ -107,7 +112,7 @@ export class MCPManager extends EventEmitter {
       this.transports.delete(serverName);
     }
 
-    this.emit('serverRemoved', serverName);
+    this.emit("serverRemoved", serverName);
   }
 
   async callTool(toolName: string, arguments_: any): Promise<CallToolResult> {
@@ -122,11 +127,11 @@ export class MCPManager extends EventEmitter {
     }
 
     // Extract the original tool name (remove mcp__servername__ prefix)
-    const originalToolName = toolName.replace(`mcp__${tool.serverName}__`, '');
+    const originalToolName = toolName.replace(`mcp__${tool.serverName}__`, "");
 
     return await client.callTool({
       name: originalToolName,
-      arguments: arguments_
+      arguments: arguments_,
     });
   }
 
@@ -153,18 +158,21 @@ export class MCPManager extends EventEmitter {
       return; // Already initialized
     }
 
-    const { loadMCPConfig } = await import('../mcp/config');
+    const { loadMCPConfig } = await import("../mcp/config");
     const config = loadMCPConfig();
-    
+
     // Initialize servers in parallel to avoid blocking
-    const initPromises = config.servers.map(async (serverConfig) => {
+    const initPromises = config.servers.map(async serverConfig => {
       try {
         await this.addServer(serverConfig);
       } catch (error) {
-        console.warn(`Failed to initialize MCP server ${serverConfig.name}:`, error);
+        console.warn(
+          `Failed to initialize MCP server ${serverConfig.name}:`,
+          error,
+        );
       }
     });
-    
+
     await Promise.all(initPromises);
   }
 }

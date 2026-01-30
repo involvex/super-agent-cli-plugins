@@ -1,4 +1,8 @@
-import { getSettingsManager, UserSettings, ProjectSettings } from './settings-manager.js';
+import {
+  getSettingsManager,
+  UserSettings,
+  ProjectSettings,
+} from "./settings-manager";
 
 export interface ModelOption {
   model: string;
@@ -27,7 +31,7 @@ export function loadModelConfig(): ModelOption[] {
   const models = manager.getAvailableModels();
 
   return models.map(model => ({
-    model: model.trim()
+    model: model.trim(),
   }));
 }
 
@@ -52,5 +56,5 @@ export function updateCurrentModel(modelName: string): void {
  */
 export function updateDefaultModel(modelName: string): void {
   const manager = getSettingsManager();
-  manager.updateUserSetting('defaultModel', modelName);
+  manager.updateUserSetting("defaultModel", modelName);
 }

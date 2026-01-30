@@ -1,5 +1,5 @@
-import { getSettingsManager } from "../utils/settings-manager.js";
-import { MCPServerConfig } from "./client.js";
+import { getSettingsManager } from "../utils/settings-manager";
+import { MCPServerConfig } from "./client";
 
 export interface MCPConfig {
   servers: MCPServerConfig[];
@@ -11,7 +11,9 @@ export interface MCPConfig {
 export function loadMCPConfig(): MCPConfig {
   const manager = getSettingsManager();
   const projectSettings = manager.loadProjectSettings();
-  const servers = projectSettings.mcpServers ? Object.values(projectSettings.mcpServers) : [];
+  const servers = projectSettings.mcpServers
+    ? Object.values(projectSettings.mcpServers)
+    : [];
   return { servers };
 }
 
@@ -24,7 +26,7 @@ export function saveMCPConfig(config: MCPConfig): void {
     mcpServers[server.name] = server;
   }
 
-  manager.updateProjectSetting('mcpServers', mcpServers);
+  manager.updateProjectSetting("mcpServers", mcpServers);
 }
 
 export function addMCPServer(config: MCPServerConfig): void {
@@ -33,7 +35,7 @@ export function addMCPServer(config: MCPServerConfig): void {
   const mcpServers = projectSettings.mcpServers || {};
 
   mcpServers[config.name] = config;
-  manager.updateProjectSetting('mcpServers', mcpServers);
+  manager.updateProjectSetting("mcpServers", mcpServers);
 }
 
 export function removeMCPServer(serverName: string): void {
@@ -43,7 +45,7 @@ export function removeMCPServer(serverName: string): void {
 
   if (mcpServers) {
     delete mcpServers[serverName];
-    manager.updateProjectSetting('mcpServers', mcpServers);
+    manager.updateProjectSetting("mcpServers", mcpServers);
   }
 }
 

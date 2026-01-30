@@ -1,6 +1,6 @@
+import { EventEmitter } from "events";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { EventEmitter } from "events";
 
 const execAsync = promisify(exec);
 
@@ -44,7 +44,7 @@ export class ConfirmationService extends EventEmitter {
 
   async requestConfirmation(
     options: ConfirmationOptions,
-    operationType: "file" | "bash" = "file"
+    operationType: "file" | "bash" = "file",
   ): Promise<ConfirmationResult> {
     // Check session flags
     if (
@@ -66,7 +66,7 @@ export class ConfirmationService extends EventEmitter {
     }
 
     // Create a promise that will be resolved by the UI component
-    this.pendingConfirmation = new Promise<ConfirmationResult>((resolve) => {
+    this.pendingConfirmation = new Promise<ConfirmationResult>(resolve => {
       this.resolveConfirmation = resolve;
     });
 
@@ -142,7 +142,7 @@ export class ConfirmationService extends EventEmitter {
 
   setSessionFlag(
     flagType: "fileOperations" | "bashCommands" | "allOperations",
-    value: boolean
+    value: boolean,
   ) {
     this.sessionFlags[flagType] = value;
   }

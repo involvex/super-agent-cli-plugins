@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box } from 'ink';
+import React from "react";
+import { Box } from "ink";
 
 interface MaxSizedBoxProps {
   maxHeight?: number;
@@ -14,10 +14,7 @@ export const MaxSizedBox: React.FC<MaxSizedBoxProps> = ({
   ...props
 }) => {
   return (
-    <Box 
-      flexDirection="column"
-      {...props}
-    >
+    <Box flexDirection="column" {...props}>
       {children}
     </Box>
   );

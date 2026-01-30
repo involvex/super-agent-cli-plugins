@@ -1,5 +1,5 @@
-import React from "react";
 import { Box, Text } from "ink";
+import React from "react";
 
 interface ModelOption {
   model: string;
@@ -18,7 +18,9 @@ export function ModelSelection({
   isVisible,
   currentModel,
 }: ModelSelectionProps) {
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <Box marginTop={1} flexDirection="column">

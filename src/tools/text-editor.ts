@@ -1,8 +1,8 @@
-import fs from "fs-extra";
-import * as path from "path";
+import { ConfirmationService } from "../utils/confirmation-service";
 import { writeFile as writeFilePromise } from "fs/promises";
-import { ToolResult, EditorCommand } from "../types/index.js";
-import { ConfirmationService } from "../utils/confirmation-service.js";
+import { ToolResult, EditorCommand } from "../types/index";
+import * as path from "path";
+import fs from "fs-extra";
 
 export class TextEditorTool {
   private editHistory: EditorCommand[] = [];
@@ -10,7 +10,7 @@ export class TextEditorTool {
 
   async view(
     filePath: string,
-    viewRange?: [number, number]
+    viewRange?: [number, number],
   ): Promise<ToolResult> {
     try {
       const resolvedPath = path.resolve(filePath);
@@ -72,7 +72,7 @@ export class TextEditorTool {
     filePath: string,
     oldStr: string,
     newStr: string,
-    replaceAll: boolean = false
+    replaceAll: boolean = false,
   ): Promise<ToolResult> {
     try {
       const resolvedPath = path.resolve(filePath);
@@ -87,7 +87,7 @@ export class TextEditorTool {
       const content = await fs.readFile(resolvedPath, "utf-8");
 
       if (!content.includes(oldStr)) {
-        if (oldStr.includes('\n')) {
+        if (oldStr.includes("\n")) {
           const fuzzyResult = this.findFuzzyMatch(content, oldStr);
           if (fuzzyResult) {
             oldStr = fuzzyResult;
@@ -105,11 +105,15 @@ export class TextEditorTool {
         }
       }
 
-      const occurrences = (content.match(new RegExp(oldStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
-      
+      const occurrences = (
+        content.match(
+          new RegExp(oldStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+        ) || []
+      ).length;
+
       const sessionFlags = this.confirmationService.getSessionFlags();
       if (!sessionFlags.fileOperations && !sessionFlags.allOperations) {
-        const previewContent = replaceAll 
+        const previewContent = replaceAll
           ? content.split(oldStr).join(newStr)
           : content.replace(oldStr, newStr);
         const oldLines = content.split("\n");
@@ -119,12 +123,12 @@ export class TextEditorTool {
         const confirmationResult =
           await this.confirmationService.requestConfirmation(
             {
-              operation: `Edit file${replaceAll && occurrences > 1 ? ` (${occurrences} occurrences)` : ''}`,
+              operation: `Edit file${replaceAll && occurrences > 1 ? ` (${occurrences} occurrences)` : ""}`,
               filename: filePath,
               showVSCodeOpen: false,
               content: diffContent,
             },
-            "file"
+            "file",
           );
 
         if (!confirmationResult.confirmed) {
@@ -177,7 +181,7 @@ export class TextEditorTool {
           `--- /dev/null`,
           `+++ b/${filePath}`,
           `@@ -0,0 +1,${contentLines.length} @@`,
-          ...contentLines.map((line) => `+${line}`),
+          ...contentLines.map(line => `+${line}`),
         ].join("\n");
 
         const confirmationResult =
@@ -188,7 +192,7 @@ export class TextEditorTool {
               showVSCodeOpen: false,
               content: diffContent,
             },
-            "file"
+            "file",
           );
 
         if (!confirmationResult.confirmed) {
@@ -231,7 +235,7 @@ export class TextEditorTool {
     filePath: string,
     startLine: number,
     endLine: number,
-    newContent: string
+    newContent: string,
   ): Promise<ToolResult> {
     try {
       const resolvedPath = path.resolve(filePath);
@@ -245,14 +249,14 @@ export class TextEditorTool {
 
       const fileContent = await fs.readFile(resolvedPath, "utf-8");
       const lines = fileContent.split("\n");
-      
+
       if (startLine < 1 || startLine > lines.length) {
         return {
           success: false,
           error: `Invalid start line: ${startLine}. File has ${lines.length} lines.`,
         };
       }
-      
+
       if (endLine < startLine || endLine > lines.length) {
         return {
           success: false,
@@ -264,8 +268,12 @@ export class TextEditorTool {
       if (!sessionFlags.fileOperations && !sessionFlags.allOperations) {
         const newLines = [...lines];
         const replacementLines = newContent.split("\n");
-        newLines.splice(startLine - 1, endLine - startLine + 1, ...replacementLines);
-        
+        newLines.splice(
+          startLine - 1,
+          endLine - startLine + 1,
+          ...replacementLines,
+        );
+
         const diffContent = this.generateDiff(lines, newLines, filePath);
 
         const confirmationResult =
@@ -276,13 +284,15 @@ export class TextEditorTool {
               showVSCodeOpen: false,
               content: diffContent,
             },
-            "file"
+            "file",
           );
 
         if (!confirmationResult.confirmed) {
           return {
             success: false,
-            error: confirmationResult.feedback || "Line replacement cancelled by user",
+            error:
+              confirmationResult.feedback ||
+              "Line replacement cancelled by user",
           };
         }
       }
@@ -318,7 +328,7 @@ export class TextEditorTool {
   async insert(
     filePath: string,
     insertLine: number,
-    content: string
+    content: string,
   ): Promise<ToolResult> {
     try {
       const resolvedPath = path.resolve(filePath);
@@ -374,7 +384,7 @@ export class TextEditorTool {
             const content = await fs.readFile(lastEdit.path, "utf-8");
             const revertedContent = content.replace(
               lastEdit.new_str,
-              lastEdit.old_str
+              lastEdit.old_str,
             );
             await writeFilePromise(lastEdit.path, revertedContent, "utf-8");
           }
@@ -410,72 +420,91 @@ export class TextEditorTool {
 
   private findFuzzyMatch(content: string, searchStr: string): string | null {
     const functionMatch = searchStr.match(/function\s+(\w+)/);
-    if (!functionMatch) return null;
-    
+    if (!functionMatch) {
+      return null;
+    }
+
     const functionName = functionMatch[1];
-    const contentLines = content.split('\n');
-    
+    const contentLines = content.split("\n");
+
     let functionStart = -1;
     for (let i = 0; i < contentLines.length; i++) {
-      if (contentLines[i].includes(`function ${functionName}`) && contentLines[i].includes('{')) {
+      if (
+        contentLines[i].includes(`function ${functionName}`) &&
+        contentLines[i].includes("{")
+      ) {
         functionStart = i;
         break;
       }
     }
-    
-    if (functionStart === -1) return null;
-    
+
+    if (functionStart === -1) {
+      return null;
+    }
+
     let braceCount = 0;
     let functionEnd = functionStart;
-    
+
     for (let i = functionStart; i < contentLines.length; i++) {
       const line = contentLines[i];
       for (const char of line) {
-        if (char === '{') braceCount++;
-        if (char === '}') braceCount--;
+        if (char === "{") {
+          braceCount++;
+        }
+        if (char === "}") {
+          braceCount--;
+        }
       }
-      
+
       if (braceCount === 0 && i > functionStart) {
         functionEnd = i;
         break;
       }
     }
-    
-    const actualFunction = contentLines.slice(functionStart, functionEnd + 1).join('\n');
-    
+
+    const actualFunction = contentLines
+      .slice(functionStart, functionEnd + 1)
+      .join("\n");
+
     const searchNormalized = this.normalizeForComparison(searchStr);
     const actualNormalized = this.normalizeForComparison(actualFunction);
-    
+
     if (this.isSimilarStructure(searchNormalized, actualNormalized)) {
       return actualFunction;
     }
-    
+
     return null;
   }
-  
+
   private normalizeForComparison(str: string): string {
     return str
       .replace(/["'`]/g, '"')
-      .replace(/\s+/g, ' ')
-      .replace(/{\s+/g, '{ ')
-      .replace(/\s+}/g, ' }')
-      .replace(/;\s*/g, ';')
+      .replace(/\s+/g, " ")
+      .replace(/{\s+/g, "{ ")
+      .replace(/\s+}/g, " }")
+      .replace(/;\s*/g, ";")
       .trim();
   }
-  
+
   private isSimilarStructure(search: string, actual: string): boolean {
     const extractTokens = (str: string) => {
-      const tokens = str.match(/\b(function|console\.log|return|if|else|for|while)\b/g) || [];
+      const tokens =
+        str.match(/\b(function|console\.log|return|if|else|for|while)\b/g) ||
+        [];
       return tokens;
     };
 
     const searchTokens = extractTokens(search);
     const actualTokens = extractTokens(actual);
 
-    if (searchTokens.length !== actualTokens.length) return false;
+    if (searchTokens.length !== actualTokens.length) {
+      return false;
+    }
 
     for (let i = 0; i < searchTokens.length; i++) {
-      if (searchTokens[i] !== actualTokens[i]) return false;
+      if (searchTokens[i] !== actualTokens[i]) {
+        return false;
+      }
     }
 
     return true;
@@ -488,7 +517,9 @@ export class TextEditorTool {
   private computeLCS(oldLines: string[], newLines: string[]): number[][] {
     const m = oldLines.length;
     const n = newLines.length;
-    const dp: number[][] = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+    const dp: number[][] = Array(m + 1)
+      .fill(0)
+      .map(() => Array(n + 1).fill(0));
 
     // Build LCS length table
     for (let i = 1; i <= m; i++) {
@@ -511,8 +542,13 @@ export class TextEditorTool {
   private extractChanges(
     oldLines: string[],
     newLines: string[],
-    lcs: number[][]
-  ): Array<{ oldStart: number; oldEnd: number; newStart: number; newEnd: number }> {
+    lcs: number[][],
+  ): Array<{
+    oldStart: number;
+    oldEnd: number;
+    newStart: number;
+    newEnd: number;
+  }> {
     const changes: Array<{
       oldStart: number;
       oldEnd: number;
@@ -534,7 +570,7 @@ export class TextEditorTool {
             oldStart: i,
             oldEnd: oldEnd,
             newStart: j,
-            newEnd: newEnd
+            newEnd: newEnd,
           });
           inChange = false;
         }
@@ -565,7 +601,7 @@ export class TextEditorTool {
         oldStart: 0,
         oldEnd: oldEnd,
         newStart: 0,
-        newEnd: newEnd
+        newEnd: newEnd,
       });
     }
 
@@ -575,99 +611,122 @@ export class TextEditorTool {
   private generateDiff(
     oldLines: string[],
     newLines: string[],
-    filePath: string
+    filePath: string,
   ): string {
     const CONTEXT_LINES = 3;
 
     // Use LCS-based diff algorithm to find actual changes
     const lcs = this.computeLCS(oldLines, newLines);
     const changes = this.extractChanges(oldLines, newLines, lcs);
-    
+
     const hunks: Array<{
       oldStart: number;
       oldCount: number;
       newStart: number;
       newCount: number;
-      lines: Array<{ type: '+' | '-' | ' '; content: string }>;
+      lines: Array<{ type: "+" | "-" | " "; content: string }>;
     }> = [];
-    
+
     let accumulatedOffset = 0;
-    
+
     for (let changeIdx = 0; changeIdx < changes.length; changeIdx++) {
       const change = changes[changeIdx];
-      
+
       let contextStart = Math.max(0, change.oldStart - CONTEXT_LINES);
       let contextEnd = Math.min(oldLines.length, change.oldEnd + CONTEXT_LINES);
-      
+
       if (hunks.length > 0) {
         const lastHunk = hunks[hunks.length - 1];
         const lastHunkEnd = lastHunk.oldStart + lastHunk.oldCount;
-        
+
         if (lastHunkEnd >= contextStart) {
           const oldHunkEnd = lastHunk.oldStart + lastHunk.oldCount;
-          const newContextEnd = Math.min(oldLines.length, change.oldEnd + CONTEXT_LINES);
-          
+          const newContextEnd = Math.min(
+            oldLines.length,
+            change.oldEnd + CONTEXT_LINES,
+          );
+
           for (let idx = oldHunkEnd; idx < change.oldStart; idx++) {
-            lastHunk.lines.push({ type: ' ', content: oldLines[idx] });
+            lastHunk.lines.push({ type: " ", content: oldLines[idx] });
           }
-          
+
           for (let idx = change.oldStart; idx < change.oldEnd; idx++) {
-            lastHunk.lines.push({ type: '-', content: oldLines[idx] });
+            lastHunk.lines.push({ type: "-", content: oldLines[idx] });
           }
           for (let idx = change.newStart; idx < change.newEnd; idx++) {
-            lastHunk.lines.push({ type: '+', content: newLines[idx] });
+            lastHunk.lines.push({ type: "+", content: newLines[idx] });
           }
-          
-          for (let idx = change.oldEnd; idx < newContextEnd && idx < oldLines.length; idx++) {
-            lastHunk.lines.push({ type: ' ', content: oldLines[idx] });
+
+          for (
+            let idx = change.oldEnd;
+            idx < newContextEnd && idx < oldLines.length;
+            idx++
+          ) {
+            lastHunk.lines.push({ type: " ", content: oldLines[idx] });
           }
-          
+
           lastHunk.oldCount = newContextEnd - lastHunk.oldStart;
-          lastHunk.newCount = lastHunk.oldCount + (change.newEnd - change.newStart) - (change.oldEnd - change.oldStart);
-          
+          lastHunk.newCount =
+            lastHunk.oldCount +
+            (change.newEnd - change.newStart) -
+            (change.oldEnd - change.oldStart);
+
           continue;
         }
       }
-      
-      const hunk: typeof hunks[0] = {
+
+      const hunk: (typeof hunks)[0] = {
         oldStart: contextStart + 1,
         oldCount: contextEnd - contextStart,
         newStart: contextStart + 1 + accumulatedOffset,
-        newCount: contextEnd - contextStart + (change.newEnd - change.newStart) - (change.oldEnd - change.oldStart),
-        lines: []
+        newCount:
+          contextEnd -
+          contextStart +
+          (change.newEnd - change.newStart) -
+          (change.oldEnd - change.oldStart),
+        lines: [],
       };
-      
+
       for (let idx = contextStart; idx < change.oldStart; idx++) {
-        hunk.lines.push({ type: ' ', content: oldLines[idx] });
+        hunk.lines.push({ type: " ", content: oldLines[idx] });
       }
-      
+
       for (let idx = change.oldStart; idx < change.oldEnd; idx++) {
-        hunk.lines.push({ type: '-', content: oldLines[idx] });
+        hunk.lines.push({ type: "-", content: oldLines[idx] });
       }
-      
+
       for (let idx = change.newStart; idx < change.newEnd; idx++) {
-        hunk.lines.push({ type: '+', content: newLines[idx] });
+        hunk.lines.push({ type: "+", content: newLines[idx] });
       }
-      
-      for (let idx = change.oldEnd; idx < contextEnd && idx < oldLines.length; idx++) {
-        hunk.lines.push({ type: ' ', content: oldLines[idx] });
+
+      for (
+        let idx = change.oldEnd;
+        idx < contextEnd && idx < oldLines.length;
+        idx++
+      ) {
+        hunk.lines.push({ type: " ", content: oldLines[idx] });
       }
-      
+
       hunks.push(hunk);
-      
-      accumulatedOffset += (change.newEnd - change.newStart) - (change.oldEnd - change.oldStart);
+
+      accumulatedOffset +=
+        change.newEnd - change.newStart - (change.oldEnd - change.oldStart);
     }
-    
+
     let addedLines = 0;
     let removedLines = 0;
-    
+
     for (const hunk of hunks) {
       for (const line of hunk.lines) {
-        if (line.type === '+') addedLines++;
-        if (line.type === '-') removedLines++;
+        if (line.type === "+") {
+          addedLines++;
+        }
+        if (line.type === "-") {
+          removedLines++;
+        }
       }
     }
-    
+
     let summary = `Updated ${filePath}`;
     if (addedLines > 0 && removedLines > 0) {
       summary += ` with ${addedLines} addition${
@@ -682,19 +741,19 @@ export class TextEditorTool {
     } else if (changes.length === 0) {
       return `No changes in ${filePath}`;
     }
-    
+
     let diff = summary + "\n";
     diff += `--- a/${filePath}\n`;
     diff += `+++ b/${filePath}\n`;
-    
+
     for (const hunk of hunks) {
       diff += `@@ -${hunk.oldStart},${hunk.oldCount} +${hunk.newStart},${hunk.newCount} @@\n`;
-      
+
       for (const line of hunk.lines) {
         diff += `${line.type}${line.content}\n`;
       }
     }
-    
+
     return diff.trim();
   }
 

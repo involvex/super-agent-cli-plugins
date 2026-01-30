@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { DiffRenderer } from "./diff-renderer";
 import { Box, Text, useInput } from "ink";
-import { DiffRenderer } from "./diff-renderer.js";
+import React, { useState } from "react";
 
 interface ConfirmationDialogProps {
   operation: string;
@@ -37,22 +37,22 @@ export default function ConfirmationDialog({
         return;
       }
       if (key.backspace || key.delete) {
-        setFeedback((prev) => prev.slice(0, -1));
+        setFeedback(prev => prev.slice(0, -1));
         return;
       }
       if (input && !key.ctrl && !key.meta) {
-        setFeedback((prev) => prev + input);
+        setFeedback(prev => prev + input);
       }
       return;
     }
 
     if (key.upArrow || (key.shift && key.tab)) {
-      setSelectedOption((prev) => (prev > 0 ? prev - 1 : options.length - 1));
+      setSelectedOption(prev => (prev > 0 ? prev - 1 : options.length - 1));
       return;
     }
 
     if (key.downArrow || key.tab) {
-      setSelectedOption((prev) => (prev + 1) % options.length);
+      setSelectedOption(prev => (prev + 1) % options.length);
       return;
     }
 
@@ -131,7 +131,7 @@ export default function ConfirmationDialog({
         {/* Show content preview if provided */}
         {content && (
           <>
-            <Text color="gray">⎿ {content.split('\n')[0]}</Text>
+            <Text color="gray">⎿ {content.split("\n")[0]}</Text>
             <Box marginLeft={4} flexDirection="column">
               <DiffRenderer
                 diffContent={content}

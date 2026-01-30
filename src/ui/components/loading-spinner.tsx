@@ -1,6 +1,6 @@
+import { formatTokenCount } from "../../utils/token-counter";
 import React, { useState, useEffect } from "react";
 import { Box, Text } from "ink";
-import { formatTokenCount } from "../../utils/token-counter.js";
 
 interface LoadingSpinnerProps {
   isActive: boolean;
@@ -34,19 +34,23 @@ export function LoadingSpinner({
   const [loadingTextIndex, setLoadingTextIndex] = useState(0);
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      return;
+    }
 
     const spinnerFrames = ["/", "-", "\\", "|"];
     // Reduced frequency: 500ms instead of 250ms to reduce flickering on Windows
     const interval = setInterval(() => {
-      setSpinnerFrame((prev) => (prev + 1) % spinnerFrames.length);
+      setSpinnerFrame(prev => (prev + 1) % spinnerFrames.length);
     }, 500);
 
     return () => clearInterval(interval);
   }, [isActive]);
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      return;
+    }
 
     setLoadingTextIndex(Math.floor(Math.random() * loadingTexts.length));
 
@@ -58,7 +62,9 @@ export function LoadingSpinner({
     return () => clearInterval(interval);
   }, [isActive]);
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   const spinnerFrames = ["/", "-", "\\", "|"];
 

@@ -15,7 +15,10 @@
     "jsx": "react",
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "rewriteRelativeImportExtensions": true,
+    // "allowImportingTsExtensions": true,
+    "allowJs": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

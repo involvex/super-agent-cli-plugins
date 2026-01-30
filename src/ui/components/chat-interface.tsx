@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Box, Text } from "ink";
-import { GrokAgent, ChatEntry } from "../../agent/grok-agent.js";
-import { useInputHandler } from "../../hooks/use-input-handler.js";
-import { LoadingSpinner } from "./loading-spinner.js";
-import { CommandSuggestions } from "./command-suggestions.js";
-import { ModelSelection } from "./model-selection.js";
-import { ChatHistory } from "./chat-history.js";
-import { ChatInput } from "./chat-input.js";
-import { MCPStatus } from "./mcp-status.js";
-import ConfirmationDialog from "./confirmation-dialog.js";
 import {
   ConfirmationService,
   ConfirmationOptions,
-} from "../../utils/confirmation-service.js";
-import ApiKeyInput from "./api-key-input.js";
+} from "../../utils/confirmation-service.ts";
+import { useInputHandler } from "../../hooks/use-input-handler";
+import { GrokAgent, ChatEntry } from "../../agent/grok-agent";
+import { CommandSuggestions } from "./command-suggestions";
+import React, { useState, useEffect, useRef } from "react";
+import ConfirmationDialog from "./confirmation-dialog";
+import { ModelSelection } from "./model-selection.ts";
+import { LoadingSpinner } from "./loading-spinner.ts";
+import { ChatHistory } from "./chat-history.ts";
+import ApiKeyInput from "./api-key-input.ts";
+import { MCPStatus } from "./mcp-status.ts";
+import { ChatInput } from "./chat-input.ts";
+import { Box, Text } from "ink";
 import cfonts from "cfonts";
 
 interface ChatInterfaceProps {
@@ -124,7 +124,9 @@ function ChatInterfaceWithAgent({
 
         try {
           let streamingEntry: ChatEntry | null = null;
-          for await (const chunk of agent.processUserMessageStream(initialMessage)) {
+          for await (const chunk of agent.processUserMessageStream(
+            initialMessage,
+          )) {
             switch (chunk.type) {
               case "content":
                 if (chunk.content) {
@@ -135,15 +137,15 @@ function ChatInterfaceWithAgent({
                       timestamp: new Date(),
                       isStreaming: true,
                     };
-                    setChatHistory((prev) => [...prev, newStreamingEntry]);
+                    setChatHistory(prev => [...prev, newStreamingEntry]);
                     streamingEntry = newStreamingEntry;
                   } else {
-                    setChatHistory((prev) =>
+                    setChatHistory(prev =>
                       prev.map((entry, idx) =>
                         idx === prev.length - 1 && entry.isStreaming
                           ? { ...entry, content: entry.content + chunk.content }
-                          : entry
-                      )
+                          : entry,
+                      ),
                     );
                   }
                 }
@@ -156,35 +158,35 @@ function ChatInterfaceWithAgent({
               case "tool_calls":
                 if (chunk.toolCalls) {
                   // Stop streaming for the current assistant message
-                  setChatHistory((prev) =>
-                    prev.map((entry) =>
+                  setChatHistory(prev =>
+                    prev.map(entry =>
                       entry.isStreaming
                         ? {
                             ...entry,
                             isStreaming: false,
                             toolCalls: chunk.toolCalls,
                           }
-                        : entry
-                    )
+                        : entry,
+                    ),
                   );
                   streamingEntry = null;
 
                   // Add individual tool call entries to show tools are being executed
-                  chunk.toolCalls.forEach((toolCall) => {
+                  chunk.toolCalls.forEach(toolCall => {
                     const toolCallEntry: ChatEntry = {
                       type: "tool_call",
                       content: "Executing...",
                       timestamp: new Date(),
                       toolCall: toolCall,
                     };
-                    setChatHistory((prev) => [...prev, toolCallEntry]);
+                    setChatHistory(prev => [...prev, toolCallEntry]);
                   });
                 }
                 break;
               case "tool_result":
                 if (chunk.toolCall && chunk.toolResult) {
-                  setChatHistory((prev) =>
-                    prev.map((entry) => {
+                  setChatHistory(prev =>
+                    prev.map(entry => {
                       if (entry.isStreaming) {
                         return { ...entry, isStreaming: false };
                       }
@@ -202,17 +204,19 @@ function ChatInterfaceWithAgent({
                         };
                       }
                       return entry;
-                    })
+                    }),
                   );
                   streamingEntry = null;
                 }
                 break;
               case "done":
                 if (streamingEntry) {
-                  setChatHistory((prev) =>
-                    prev.map((entry) =>
-                      entry.isStreaming ? { ...entry, isStreaming: false } : entry
-                    )
+                  setChatHistory(prev =>
+                    prev.map(entry =>
+                      entry.isStreaming
+                        ? { ...entry, isStreaming: false }
+                        : entry,
+                    ),
                   );
                 }
                 setIsStreaming(false);
@@ -225,7 +229,7 @@ function ChatInterfaceWithAgent({
             content: `Error: ${error.message}`,
             timestamp: new Date(),
           };
-          setChatHistory((prev) => [...prev, errorEntry]);
+          setChatHistory(prev => [...prev, errorEntry]);
           setIsStreaming(false);
         }
 
@@ -247,7 +251,7 @@ function ChatInterfaceWithAgent({
     return () => {
       confirmationService.off(
         "confirmation-requested",
-        handleConfirmationRequest
+        handleConfirmationRequest,
       );
     };
   }, [confirmationService]);
@@ -264,7 +268,7 @@ function ChatInterfaceWithAgent({
 
     const interval = setInterval(() => {
       setProcessingTime(
-        Math.floor((Date.now() - processingStartTime.current) / 1000)
+        Math.floor((Date.now() - processingStartTime.current) / 1000),
       );
     }, 1000);
 
@@ -395,7 +399,7 @@ export default function ChatInterface({
   initialMessage,
 }: ChatInterfaceProps) {
   const [currentAgent, setCurrentAgent] = useState<GrokAgent | null>(
-    agent || null
+    agent || null,
   );
 
   const handleApiKeySet = (newAgent: GrokAgent) => {

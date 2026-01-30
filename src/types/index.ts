@@ -12,7 +12,7 @@ export interface Tool {
 }
 
 export interface EditorCommand {
-  command: 'view' | 'str_replace' | 'create' | 'insert' | 'undo_edit';
+  command: "view" | "str_replace" | "create" | "insert" | "undo_edit";
   path?: string;
   old_str?: string;
   new_str?: string;

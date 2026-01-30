@@ -1,8 +1,8 @@
-import fs from "fs-extra";
+import { ConfirmationService } from "../utils/confirmation-service";
+import { ToolResult } from "../types/index";
 import * as path from "path";
+import fs from "fs-extra";
 import axios from "axios";
-import { ToolResult } from "../types/index.js";
-import { ConfirmationService } from "../utils/confirmation-service.js";
 
 export class MorphEditorTool {
   private confirmationService = ConfirmationService.getInstance();
@@ -12,18 +12,20 @@ export class MorphEditorTool {
   constructor(apiKey?: string) {
     this.morphApiKey = apiKey || process.env.MORPH_API_KEY || "";
     if (!this.morphApiKey) {
-      console.warn("MORPH_API_KEY not found. Morph editor functionality will be limited.");
+      console.warn(
+        "MORPH_API_KEY not found. Morph editor functionality will be limited.",
+      );
     }
   }
 
   /**
    * Use this tool to make an edit to an existing file.
-   * 
+   *
    * This will be read by a less intelligent model, which will quickly apply the edit. You should make it clear what the edit is, while also minimizing the unchanged code you write.
    * When writing the edit, you should specify each edit in sequence, with the special comment // ... existing code ... to represent unchanged code in between edited lines.
-   * 
+   *
    * For example:
-   * 
+   *
    * // ... existing code ...
    * FIRST_EDIT
    * // ... existing code ...
@@ -31,7 +33,7 @@ export class MorphEditorTool {
    * // ... existing code ...
    * THIRD_EDIT
    * // ... existing code ...
-   * 
+   *
    * You should still bias towards repeating as few lines of the original file as possible to convey the change.
    * But, each edit should contain sufficient context of unchanged lines around the code you're editing to resolve ambiguity.
    * DO NOT omit spans of pre-existing code (or comments) without using the // ... existing code ... comment to indicate its absence. If you omit the existing code comment, the model may inadvertently delete these lines.
@@ -42,7 +44,7 @@ export class MorphEditorTool {
   async editFile(
     targetFile: string,
     instructions: string,
-    codeEdit: string
+    codeEdit: string,
   ): Promise<ToolResult> {
     try {
       const resolvedPath = path.resolve(targetFile);
@@ -67,15 +69,16 @@ export class MorphEditorTool {
       // Check user confirmation before proceeding
       const sessionFlags = this.confirmationService.getSessionFlags();
       if (!sessionFlags.fileOperations && !sessionFlags.allOperations) {
-        const confirmationResult = await this.confirmationService.requestConfirmation(
-          {
-            operation: "Edit file with Morph Fast Apply",
-            filename: targetFile,
-            showVSCodeOpen: false,
-            content: `Instructions: ${instructions}\n\nEdit:\n${codeEdit}`,
-          },
-          "file"
-        );
+        const confirmationResult =
+          await this.confirmationService.requestConfirmation(
+            {
+              operation: "Edit file with Morph Fast Apply",
+              filename: targetFile,
+              showVSCodeOpen: false,
+              content: `Instructions: ${instructions}\n\nEdit:\n${codeEdit}`,
+            },
+            "file",
+          );
 
         if (!confirmationResult.confirmed) {
           return {
@@ -86,7 +89,11 @@ export class MorphEditorTool {
       }
 
       // Call Morph Fast Apply API
-      const mergedCode = await this.callMorphApply(instructions, initialCode, codeEdit);
+      const mergedCode = await this.callMorphApply(
+        instructions,
+        initialCode,
+        codeEdit,
+      );
 
       // Write the merged code back to file
       await fs.writeFile(resolvedPath, mergedCode, "utf-8");
@@ -111,32 +118,42 @@ export class MorphEditorTool {
   private async callMorphApply(
     instructions: string,
     initialCode: string,
-    editSnippet: string
+    editSnippet: string,
   ): Promise<string> {
     try {
-      const response = await axios.post(`${this.morphBaseUrl}/chat/completions`, {
-        model: "morph-v3-large",
-        messages: [
-          {
-            role: "user",
-            content: `<instruction>${instructions}</instruction>\n<code>${initialCode}</code>\n<update>${editSnippet}</update>`,
-          },
-        ],
-      }, {
-        headers: {
-          "Authorization": `Bearer ${this.morphApiKey}`,
-          "Content-Type": "application/json",
+      const response = await axios.post(
+        `${this.morphBaseUrl}/chat/completions`,
+        {
+          model: "morph-v3-large",
+          messages: [
+            {
+              role: "user",
+              content: `<instruction>${instructions}</instruction>\n<code>${initialCode}</code>\n<update>${editSnippet}</update>`,
+            },
+          ],
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${this.morphApiKey}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
-      if (!response.data.choices || !response.data.choices[0] || !response.data.choices[0].message) {
+      if (
+        !response.data.choices ||
+        !response.data.choices[0] ||
+        !response.data.choices[0].message
+      ) {
         throw new Error("Invalid response format from Morph API");
       }
 
       return response.data.choices[0].message.content;
     } catch (error: any) {
       if (error.response) {
-        throw new Error(`Morph API error (${error.response.status}): ${error.response.data}`);
+        throw new Error(
+          `Morph API error (${error.response.status}): ${error.response.data}`,
+        );
       }
       throw error;
     }
@@ -145,154 +162,195 @@ export class MorphEditorTool {
   private generateDiff(
     oldLines: string[],
     newLines: string[],
-    filePath: string
+    filePath: string,
   ): string {
     const CONTEXT_LINES = 3;
-    
+
     const changes: Array<{
       oldStart: number;
       oldEnd: number;
       newStart: number;
       newEnd: number;
     }> = [];
-    
-    let i = 0, j = 0;
-    
+
+    let i = 0,
+      j = 0;
+
     while (i < oldLines.length || j < newLines.length) {
-      while (i < oldLines.length && j < newLines.length && oldLines[i] === newLines[j]) {
+      while (
+        i < oldLines.length &&
+        j < newLines.length &&
+        oldLines[i] === newLines[j]
+      ) {
         i++;
         j++;
       }
-      
+
       if (i < oldLines.length || j < newLines.length) {
         const changeStart = { old: i, new: j };
-        
+
         let oldEnd = i;
         let newEnd = j;
-        
+
         while (oldEnd < oldLines.length || newEnd < newLines.length) {
           let matchFound = false;
           let matchLength = 0;
-          
-          for (let k = 0; k < Math.min(2, oldLines.length - oldEnd, newLines.length - newEnd); k++) {
-            if (oldEnd + k < oldLines.length && 
-                newEnd + k < newLines.length && 
-                oldLines[oldEnd + k] === newLines[newEnd + k]) {
+
+          for (
+            let k = 0;
+            k < Math.min(2, oldLines.length - oldEnd, newLines.length - newEnd);
+            k++
+          ) {
+            if (
+              oldEnd + k < oldLines.length &&
+              newEnd + k < newLines.length &&
+              oldLines[oldEnd + k] === newLines[newEnd + k]
+            ) {
               matchLength++;
             } else {
               break;
             }
           }
-          
-          if (matchLength >= 2 || (oldEnd >= oldLines.length && newEnd >= newLines.length)) {
+
+          if (
+            matchLength >= 2 ||
+            (oldEnd >= oldLines.length && newEnd >= newLines.length)
+          ) {
             matchFound = true;
           }
-          
+
           if (matchFound) {
             break;
           }
-          
-          if (oldEnd < oldLines.length) oldEnd++;
-          if (newEnd < newLines.length) newEnd++;
+
+          if (oldEnd < oldLines.length) {
+            oldEnd++;
+          }
+          if (newEnd < newLines.length) {
+            newEnd++;
+          }
         }
-        
+
         changes.push({
           oldStart: changeStart.old,
           oldEnd: oldEnd,
           newStart: changeStart.new,
-          newEnd: newEnd
+          newEnd: newEnd,
         });
-        
+
         i = oldEnd;
         j = newEnd;
       }
     }
-    
+
     const hunks: Array<{
       oldStart: number;
       oldCount: number;
       newStart: number;
       newCount: number;
-      lines: Array<{ type: '+' | '-' | ' '; content: string }>;
+      lines: Array<{ type: "+" | "-" | " "; content: string }>;
     }> = [];
-    
+
     let accumulatedOffset = 0;
-    
+
     for (let changeIdx = 0; changeIdx < changes.length; changeIdx++) {
       const change = changes[changeIdx];
-      
+
       let contextStart = Math.max(0, change.oldStart - CONTEXT_LINES);
       let contextEnd = Math.min(oldLines.length, change.oldEnd + CONTEXT_LINES);
-      
+
       if (hunks.length > 0) {
         const lastHunk = hunks[hunks.length - 1];
         const lastHunkEnd = lastHunk.oldStart + lastHunk.oldCount;
-        
+
         if (lastHunkEnd >= contextStart) {
           const oldHunkEnd = lastHunk.oldStart + lastHunk.oldCount;
-          const newContextEnd = Math.min(oldLines.length, change.oldEnd + CONTEXT_LINES);
-          
+          const newContextEnd = Math.min(
+            oldLines.length,
+            change.oldEnd + CONTEXT_LINES,
+          );
+
           for (let idx = oldHunkEnd; idx < change.oldStart; idx++) {
-            lastHunk.lines.push({ type: ' ', content: oldLines[idx] });
+            lastHunk.lines.push({ type: " ", content: oldLines[idx] });
           }
-          
+
           for (let idx = change.oldStart; idx < change.oldEnd; idx++) {
-            lastHunk.lines.push({ type: '-', content: oldLines[idx] });
+            lastHunk.lines.push({ type: "-", content: oldLines[idx] });
           }
           for (let idx = change.newStart; idx < change.newEnd; idx++) {
-            lastHunk.lines.push({ type: '+', content: newLines[idx] });
+            lastHunk.lines.push({ type: "+", content: newLines[idx] });
           }
-          
-          for (let idx = change.oldEnd; idx < newContextEnd && idx < oldLines.length; idx++) {
-            lastHunk.lines.push({ type: ' ', content: oldLines[idx] });
+
+          for (
+            let idx = change.oldEnd;
+            idx < newContextEnd && idx < oldLines.length;
+            idx++
+          ) {
+            lastHunk.lines.push({ type: " ", content: oldLines[idx] });
           }
-          
+
           lastHunk.oldCount = newContextEnd - lastHunk.oldStart;
-          lastHunk.newCount = lastHunk.oldCount + (change.newEnd - change.newStart) - (change.oldEnd - change.oldStart);
-          
+          lastHunk.newCount =
+            lastHunk.oldCount +
+            (change.newEnd - change.newStart) -
+            (change.oldEnd - change.oldStart);
+
           continue;
         }
       }
-      
-      const hunk: typeof hunks[0] = {
+
+      const hunk: (typeof hunks)[0] = {
         oldStart: contextStart + 1,
         oldCount: contextEnd - contextStart,
         newStart: contextStart + 1 + accumulatedOffset,
-        newCount: contextEnd - contextStart + (change.newEnd - change.newStart) - (change.oldEnd - change.oldStart),
-        lines: []
+        newCount:
+          contextEnd -
+          contextStart +
+          (change.newEnd - change.newStart) -
+          (change.oldEnd - change.oldStart),
+        lines: [],
       };
-      
+
       for (let idx = contextStart; idx < change.oldStart; idx++) {
-        hunk.lines.push({ type: ' ', content: oldLines[idx] });
+        hunk.lines.push({ type: " ", content: oldLines[idx] });
       }
-      
+
       for (let idx = change.oldStart; idx < change.oldEnd; idx++) {
-        hunk.lines.push({ type: '-', content: oldLines[idx] });
+        hunk.lines.push({ type: "-", content: oldLines[idx] });
       }
-      
+
       for (let idx = change.newStart; idx < change.newEnd; idx++) {
-        hunk.lines.push({ type: '+', content: newLines[idx] });
+        hunk.lines.push({ type: "+", content: newLines[idx] });
       }
-      
-      for (let idx = change.oldEnd; idx < contextEnd && idx < oldLines.length; idx++) {
-        hunk.lines.push({ type: ' ', content: oldLines[idx] });
+
+      for (
+        let idx = change.oldEnd;
+        idx < contextEnd && idx < oldLines.length;
+        idx++
+      ) {
+        hunk.lines.push({ type: " ", content: oldLines[idx] });
       }
-      
+
       hunks.push(hunk);
-      
-      accumulatedOffset += (change.newEnd - change.newStart) - (change.oldEnd - change.oldStart);
+
+      accumulatedOffset +=
+        change.newEnd - change.newStart - (change.oldEnd - change.oldStart);
     }
-    
+
     let addedLines = 0;
     let removedLines = 0;
-    
+
     for (const hunk of hunks) {
       for (const line of hunk.lines) {
-        if (line.type === '+') addedLines++;
-        if (line.type === '-') removedLines++;
+        if (line.type === "+") {
+          addedLines++;
+        }
+        if (line.type === "-") {
+          removedLines++;
+        }
       }
     }
-    
+
     let summary = `Updated ${filePath} with Morph Fast Apply`;
     if (addedLines > 0 && removedLines > 0) {
       summary += ` - ${addedLines} addition${
@@ -301,31 +359,29 @@ export class MorphEditorTool {
     } else if (addedLines > 0) {
       summary += ` - ${addedLines} addition${addedLines !== 1 ? "s" : ""}`;
     } else if (removedLines > 0) {
-      summary += ` - ${removedLines} removal${
-        removedLines !== 1 ? "s" : ""
-      }`;
+      summary += ` - ${removedLines} removal${removedLines !== 1 ? "s" : ""}`;
     } else if (changes.length === 0) {
       return `No changes applied to ${filePath}`;
     }
-    
+
     let diff = summary + "\n";
     diff += `--- a/${filePath}\n`;
     diff += `+++ b/${filePath}\n`;
-    
+
     for (const hunk of hunks) {
       diff += `@@ -${hunk.oldStart},${hunk.oldCount} +${hunk.newStart},${hunk.newCount} @@\n`;
-      
+
       for (const line of hunk.lines) {
         diff += `${line.type}${line.content}\n`;
       }
     }
-    
+
     return diff.trim();
   }
 
   async view(
     filePath: string,
-    viewRange?: [number, number]
+    viewRange?: [number, number],
   ): Promise<ToolResult> {
     try {
       const resolvedPath = path.resolve(filePath);

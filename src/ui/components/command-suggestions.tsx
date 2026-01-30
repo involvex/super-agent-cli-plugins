@@ -17,11 +17,11 @@ export const MAX_SUGGESTIONS = 8;
 
 export function filterCommandSuggestions<T extends { command: string }>(
   suggestions: T[],
-  input: string
+  input: string,
 ): T[] {
   const lowerInput = input.toLowerCase();
   return suggestions
-    .filter((s) => s.command.toLowerCase().startsWith(lowerInput))
+    .filter(s => s.command.toLowerCase().startsWith(lowerInput))
     .slice(0, MAX_SUGGESTIONS);
 }
 
@@ -31,11 +31,13 @@ export function CommandSuggestions({
   selectedIndex,
   isVisible,
 }: CommandSuggestionsProps) {
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   const filteredSuggestions = useMemo(
     () => filterCommandSuggestions(suggestions, input),
-    [suggestions, input]
+    [suggestions, input],
   );
 
   return (

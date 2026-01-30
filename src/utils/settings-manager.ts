@@ -1,6 +1,6 @@
-import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import * as fs from "fs";
 
 /**
  * Current settings version - increment this when adding new models or changing settings structure
@@ -77,14 +77,14 @@ export class SettingsManager {
     this.userSettingsPath = path.join(
       os.homedir(),
       ".grok",
-      "user-settings.json"
+      "user-settings.json",
     );
 
     // Project settings path: .grok/settings.json (in current working directory)
     this.projectSettingsPath = path.join(
       process.cwd(),
       ".grok",
-      "settings.json"
+      "settings.json",
     );
   }
 
@@ -115,7 +115,10 @@ export class SettingsManager {
     try {
       if (!fs.existsSync(this.userSettingsPath)) {
         // Create default user settings if file doesn't exist
-        const newSettings = { ...DEFAULT_USER_SETTINGS, settingsVersion: SETTINGS_VERSION };
+        const newSettings = {
+          ...DEFAULT_USER_SETTINGS,
+          settingsVersion: SETTINGS_VERSION,
+        };
         this.saveUserSettings(newSettings);
         return newSettings;
       }
@@ -136,7 +139,7 @@ export class SettingsManager {
     } catch (error) {
       console.warn(
         "Failed to load user settings:",
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
       return { ...DEFAULT_USER_SETTINGS };
     }
@@ -145,17 +148,22 @@ export class SettingsManager {
   /**
    * Migrate settings from an older version to the current version
    */
-  private migrateSettings(settings: UserSettings, fromVersion: number): UserSettings {
+  private migrateSettings(
+    settings: UserSettings,
+    fromVersion: number,
+  ): UserSettings {
     let migrated = { ...settings };
 
     // Migration from version 1 to 2: Add new Grok 4.1 and Grok 4 Fast models
     if (fromVersion < 2) {
       const defaultModels = DEFAULT_USER_SETTINGS.models || [];
       const existingModels = new Set(migrated.models || []);
-      
+
       // Add any new models that don't exist in user's current list
-      const newModels = defaultModels.filter(model => !existingModels.has(model));
-      
+      const newModels = defaultModels.filter(
+        model => !existingModels.has(model),
+      );
+
       // Prepend new models to the list (newest models first)
       migrated.models = [...newModels, ...(migrated.models || [])];
     }
@@ -192,12 +200,12 @@ export class SettingsManager {
       fs.writeFileSync(
         this.userSettingsPath,
         JSON.stringify(mergedSettings, null, 2),
-        { mode: 0o600 } // Secure permissions for API key
+        { mode: 0o600 }, // Secure permissions for API key
       );
     } catch (error) {
       console.error(
         "Failed to save user settings:",
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
       throw error;
     }
@@ -208,7 +216,7 @@ export class SettingsManager {
    */
   public updateUserSetting<K extends keyof UserSettings>(
     key: K,
-    value: UserSettings[K]
+    value: UserSettings[K],
   ): void {
     const settings = { [key]: value } as Partial<UserSettings>;
     this.saveUserSettings(settings);
@@ -241,7 +249,7 @@ export class SettingsManager {
     } catch (error) {
       console.warn(
         "Failed to load project settings:",
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
       return { ...DEFAULT_PROJECT_SETTINGS };
     }
@@ -271,12 +279,12 @@ export class SettingsManager {
 
       fs.writeFileSync(
         this.projectSettingsPath,
-        JSON.stringify(mergedSettings, null, 2)
+        JSON.stringify(mergedSettings, null, 2),
       );
     } catch (error) {
       console.error(
         "Failed to save project settings:",
-        error instanceof Error ? error.message : "Unknown error"
+        error instanceof Error ? error.message : "Unknown error",
       );
       throw error;
     }
@@ -287,7 +295,7 @@ export class SettingsManager {
    */
   public updateProjectSetting<K extends keyof ProjectSettings>(
     key: K,
-    value: ProjectSettings[K]
+    value: ProjectSettings[K],
   ): void {
     const settings = { [key]: value } as Partial<ProjectSettings>;
     this.saveProjectSettings(settings);
@@ -297,7 +305,7 @@ export class SettingsManager {
    * Get a specific project setting
    */
   public getProjectSetting<K extends keyof ProjectSettings>(
-    key: K
+    key: K,
   ): ProjectSettings[K] {
     const settings = this.loadProjectSettings();
     return settings[key];

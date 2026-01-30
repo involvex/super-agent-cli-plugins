@@ -1,11 +1,11 @@
+import { ConfirmationService } from "../utils/confirmation-service";
+import { useEnhancedInput, Key } from "./use-enhanced-input";
+import { GrokAgent, ChatEntry } from "../agent/grok-agent";
 import { useState, useMemo, useEffect } from "react";
 import { useInput } from "ink";
-import { GrokAgent, ChatEntry } from "../agent/grok-agent.js";
-import { ConfirmationService } from "../utils/confirmation-service.js";
-import { useEnhancedInput, Key } from "./use-enhanced-input.js";
 
-import { filterCommandSuggestions } from "../ui/components/command-suggestions.js";
-import { loadModelConfig, updateCurrentModel } from "../utils/model-config.js";
+import { filterCommandSuggestions } from "../ui/components/command-suggestions";
+import { loadModelConfig, updateCurrentModel } from "../utils/model-config";
 
 interface UseInputHandlerProps {
   agent: GrokAgent;
@@ -103,7 +103,7 @@ export function useInputHandler({
     if (showCommandSuggestions) {
       const filteredSuggestions = filterCommandSuggestions(
         commandSuggestions,
-        input
+        input,
       );
 
       if (filteredSuggestions.length === 0) {
@@ -112,21 +112,21 @@ export function useInputHandler({
         return false; // Continue processing
       } else {
         if (key.upArrow) {
-          setSelectedCommandIndex((prev) =>
-            prev === 0 ? filteredSuggestions.length - 1 : prev - 1
+          setSelectedCommandIndex(prev =>
+            prev === 0 ? filteredSuggestions.length - 1 : prev - 1,
           );
           return true;
         }
         if (key.downArrow) {
           setSelectedCommandIndex(
-            (prev) => (prev + 1) % filteredSuggestions.length
+            prev => (prev + 1) % filteredSuggestions.length,
           );
           return true;
         }
         if (key.tab || key.return) {
           const safeIndex = Math.min(
             selectedCommandIndex,
-            filteredSuggestions.length - 1
+            filteredSuggestions.length - 1,
           );
           const selectedCommand = filteredSuggestions[safeIndex];
           const newInput = selectedCommand.command + " ";
@@ -142,13 +142,13 @@ export function useInputHandler({
     // Handle model selection navigation
     if (showModelSelection) {
       if (key.upArrow) {
-        setSelectedModelIndex((prev) =>
-          prev === 0 ? availableModels.length - 1 : prev - 1
+        setSelectedModelIndex(prev =>
+          prev === 0 ? availableModels.length - 1 : prev - 1,
         );
         return true;
       }
       if (key.downArrow) {
-        setSelectedModelIndex((prev) => (prev + 1) % availableModels.length);
+        setSelectedModelIndex(prev => (prev + 1) % availableModels.length);
         return true;
       }
       if (key.tab || key.return) {
@@ -160,7 +160,7 @@ export function useInputHandler({
           content: `✓ Switched to model: ${selectedModel.model}`,
           timestamp: new Date(),
         };
-        setChatHistory((prev) => [...prev, confirmEntry]);
+        setChatHistory(prev => [...prev, confirmEntry]);
         setShowModelSelection(false);
         setSelectedModelIndex(0);
         return true;
@@ -298,7 +298,7 @@ Examples:
   "show me all TypeScript files in this project"`,
         timestamp: new Date(),
       };
-      setChatHistory((prev) => [...prev, helpEntry]);
+      setChatHistory(prev => [...prev, helpEntry]);
       clearInput();
       return true;
     }
@@ -317,7 +317,7 @@ Examples:
 
     if (trimmedInput.startsWith("/models ")) {
       const modelArg = trimmedInput.split(" ")[1];
-      const modelNames = availableModels.map((m) => m.model);
+      const modelNames = availableModels.map(m => m.model);
 
       if (modelNames.includes(modelArg)) {
         agent.setModel(modelArg);
@@ -327,7 +327,7 @@ Examples:
           content: `✓ Switched to model: ${modelArg}`,
           timestamp: new Date(),
         };
-        setChatHistory((prev) => [...prev, confirmEntry]);
+        setChatHistory(prev => [...prev, confirmEntry]);
       } else {
         const errorEntry: ChatEntry = {
           type: "assistant",
@@ -336,13 +336,12 @@ Examples:
 Available models: ${modelNames.join(", ")}`,
           timestamp: new Date(),
         };
-        setChatHistory((prev) => [...prev, errorEntry]);
+        setChatHistory(prev => [...prev, errorEntry]);
       }
 
       clearInput();
       return true;
     }
-
 
     if (trimmedInput === "/commit-and-push") {
       const userEntry: ChatEntry = {
@@ -350,7 +349,7 @@ Available models: ${modelNames.join(", ")}`,
         content: "/commit-and-push",
         timestamp: new Date(),
       };
-      setChatHistory((prev) => [...prev, userEntry]);
+      setChatHistory(prev => [...prev, userEntry]);
 
       setIsProcessing(true);
       setIsStreaming(true);
@@ -358,7 +357,7 @@ Available models: ${modelNames.join(", ")}`,
       try {
         // First check if there are any changes at all
         const initialStatusResult = await agent.executeBashCommand(
-          "git status --porcelain"
+          "git status --porcelain",
         );
 
         if (
@@ -370,7 +369,7 @@ Available models: ${modelNames.join(", ")}`,
             content: "No changes to commit. Working directory is clean.",
             timestamp: new Date(),
           };
-          setChatHistory((prev) => [...prev, noChangesEntry]);
+          setChatHistory(prev => [...prev, noChangesEntry]);
           setIsProcessing(false);
           setIsStreaming(false);
           setInput("");
@@ -388,7 +387,7 @@ Available models: ${modelNames.join(", ")}`,
             }`,
             timestamp: new Date(),
           };
-          setChatHistory((prev) => [...prev, addErrorEntry]);
+          setChatHistory(prev => [...prev, addErrorEntry]);
           setIsProcessing(false);
           setIsStreaming(false);
           setInput("");
@@ -410,7 +409,7 @@ Available models: ${modelNames.join(", ")}`,
           },
           toolResult: addResult,
         };
-        setChatHistory((prev) => [...prev, addEntry]);
+        setChatHistory(prev => [...prev, addEntry]);
 
         // Get staged changes for commit message generation
         const diffResult = await agent.executeBashCommand("git diff --cached");
@@ -431,7 +430,7 @@ Respond with ONLY the commit message, no additional text.`;
         let streamingEntry: ChatEntry | null = null;
 
         for await (const chunk of agent.processUserMessageStream(
-          commitPrompt
+          commitPrompt,
         )) {
           if (chunk.type === "content" && chunk.content) {
             if (!streamingEntry) {
@@ -441,34 +440,34 @@ Respond with ONLY the commit message, no additional text.`;
                 timestamp: new Date(),
                 isStreaming: true,
               };
-              setChatHistory((prev) => [...prev, newEntry]);
+              setChatHistory(prev => [...prev, newEntry]);
               streamingEntry = newEntry;
               commitMessage = chunk.content;
             } else {
               commitMessage += chunk.content;
-              setChatHistory((prev) =>
+              setChatHistory(prev =>
                 prev.map((entry, idx) =>
                   idx === prev.length - 1 && entry.isStreaming
                     ? {
                         ...entry,
                         content: `Generating commit message...\n\n${commitMessage}`,
                       }
-                    : entry
-                )
+                    : entry,
+                ),
               );
             }
           } else if (chunk.type === "done") {
             if (streamingEntry) {
-              setChatHistory((prev) =>
-                prev.map((entry) =>
+              setChatHistory(prev =>
+                prev.map(entry =>
                   entry.isStreaming
                     ? {
                         ...entry,
                         content: `Generated commit message: "${commitMessage.trim()}"`,
                         isStreaming: false,
                       }
-                    : entry
-                )
+                    : entry,
+                ),
               );
             }
             break;
@@ -498,7 +497,7 @@ Respond with ONLY the commit message, no additional text.`;
           },
           toolResult: commitResult,
         };
-        setChatHistory((prev) => [...prev, commitEntry]);
+        setChatHistory(prev => [...prev, commitEntry]);
 
         // If commit was successful, push to remote
         if (commitResult.success) {
@@ -530,7 +529,7 @@ Respond with ONLY the commit message, no additional text.`;
             },
             toolResult: pushResult,
           };
-          setChatHistory((prev) => [...prev, pushEntry]);
+          setChatHistory(prev => [...prev, pushEntry]);
         }
       } catch (error: any) {
         const errorEntry: ChatEntry = {
@@ -538,7 +537,7 @@ Respond with ONLY the commit message, no additional text.`;
           content: `Error during commit and push: ${error.message}`,
           timestamp: new Date(),
         };
-        setChatHistory((prev) => [...prev, errorEntry]);
+        setChatHistory(prev => [...prev, errorEntry]);
       }
 
       setIsProcessing(false);
@@ -569,7 +568,7 @@ Respond with ONLY the commit message, no additional text.`;
         content: trimmedInput,
         timestamp: new Date(),
       };
-      setChatHistory((prev) => [...prev, userEntry]);
+      setChatHistory(prev => [...prev, userEntry]);
 
       try {
         const result = await agent.executeBashCommand(trimmedInput);
@@ -590,14 +589,14 @@ Respond with ONLY the commit message, no additional text.`;
           },
           toolResult: result,
         };
-        setChatHistory((prev) => [...prev, commandEntry]);
+        setChatHistory(prev => [...prev, commandEntry]);
       } catch (error: any) {
         const errorEntry: ChatEntry = {
           type: "assistant",
           content: `Error executing command: ${error.message}`,
           timestamp: new Date(),
         };
-        setChatHistory((prev) => [...prev, errorEntry]);
+        setChatHistory(prev => [...prev, errorEntry]);
       }
 
       clearInput();
@@ -613,7 +612,7 @@ Respond with ONLY the commit message, no additional text.`;
       content: userInput,
       timestamp: new Date(),
     };
-    setChatHistory((prev) => [...prev, userEntry]);
+    setChatHistory(prev => [...prev, userEntry]);
 
     setIsProcessing(true);
     clearInput();
@@ -633,15 +632,15 @@ Respond with ONLY the commit message, no additional text.`;
                   timestamp: new Date(),
                   isStreaming: true,
                 };
-                setChatHistory((prev) => [...prev, newStreamingEntry]);
+                setChatHistory(prev => [...prev, newStreamingEntry]);
                 streamingEntry = newStreamingEntry;
               } else {
-                setChatHistory((prev) =>
+                setChatHistory(prev =>
                   prev.map((entry, idx) =>
                     idx === prev.length - 1 && entry.isStreaming
                       ? { ...entry, content: entry.content + chunk.content }
-                      : entry
-                  )
+                      : entry,
+                  ),
                 );
               }
             }
@@ -656,36 +655,36 @@ Respond with ONLY the commit message, no additional text.`;
           case "tool_calls":
             if (chunk.toolCalls) {
               // Stop streaming for the current assistant message
-              setChatHistory((prev) =>
-                prev.map((entry) =>
+              setChatHistory(prev =>
+                prev.map(entry =>
                   entry.isStreaming
                     ? {
                         ...entry,
                         isStreaming: false,
                         toolCalls: chunk.toolCalls,
                       }
-                    : entry
-                )
+                    : entry,
+                ),
               );
               streamingEntry = null;
 
               // Add individual tool call entries to show tools are being executed
-              chunk.toolCalls.forEach((toolCall) => {
+              chunk.toolCalls.forEach(toolCall => {
                 const toolCallEntry: ChatEntry = {
                   type: "tool_call",
                   content: "Executing...",
                   timestamp: new Date(),
                   toolCall: toolCall,
                 };
-                setChatHistory((prev) => [...prev, toolCallEntry]);
+                setChatHistory(prev => [...prev, toolCallEntry]);
               });
             }
             break;
 
           case "tool_result":
             if (chunk.toolCall && chunk.toolResult) {
-              setChatHistory((prev) =>
-                prev.map((entry) => {
+              setChatHistory(prev =>
+                prev.map(entry => {
                   if (entry.isStreaming) {
                     return { ...entry, isStreaming: false };
                   }
@@ -704,7 +703,7 @@ Respond with ONLY the commit message, no additional text.`;
                     };
                   }
                   return entry;
-                })
+                }),
               );
               streamingEntry = null;
             }
@@ -712,10 +711,10 @@ Respond with ONLY the commit message, no additional text.`;
 
           case "done":
             if (streamingEntry) {
-              setChatHistory((prev) =>
-                prev.map((entry) =>
-                  entry.isStreaming ? { ...entry, isStreaming: false } : entry
-                )
+              setChatHistory(prev =>
+                prev.map(entry =>
+                  entry.isStreaming ? { ...entry, isStreaming: false } : entry,
+                ),
               );
             }
             setIsStreaming(false);
@@ -728,14 +727,13 @@ Respond with ONLY the commit message, no additional text.`;
         content: `Error: ${error.message}`,
         timestamp: new Date(),
       };
-      setChatHistory((prev) => [...prev, errorEntry]);
+      setChatHistory(prev => [...prev, errorEntry]);
       setIsStreaming(false);
     }
 
     setIsProcessing(false);
     processingStartTime.current = 0;
   };
-
 
   return {
     input,

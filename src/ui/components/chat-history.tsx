@@ -1,8 +1,8 @@
-import React from "react";
+import { MarkdownRenderer } from "../utils/markdown-renderer";
+import { ChatEntry } from "../../agent/grok-agent";
+import { DiffRenderer } from "./diff-renderer";
 import { Box, Text } from "ink";
-import { ChatEntry } from "../../agent/grok-agent.js";
-import { DiffRenderer } from "./diff-renderer.js";
-import { MarkdownRenderer } from "../utils/markdown-renderer.js";
+import React from "react";
 
 interface ChatHistoryProps {
   entries: ChatEntry[];
@@ -28,7 +28,9 @@ const MemoizedChatEntry = React.memo(
       // Calculate minimum indentation like DiffRenderer does
       let baseIndentation = Infinity;
       for (const line of lines) {
-        if (line.trim() === "") continue;
+        if (line.trim() === "") {
+          continue;
+        }
         const firstCharIndex = line.search(/\S/);
         const currentIndent = firstCharIndex === -1 ? 0 : firstCharIndex;
         baseIndentation = Math.min(baseIndentation, currentIndent);
@@ -131,7 +133,7 @@ const MemoizedChatEntry = React.memo(
 
         const filePath = getFilePath(entry.toolCall);
         const isExecuting = entry.type === "tool_call" || !entry.toolResult;
-        
+
         // Format JSON content for better readability
         const formatToolContent = (content: string, toolName: string) => {
           if (toolName.startsWith("mcp__")) {
@@ -141,7 +143,7 @@ const MemoizedChatEntry = React.memo(
               if (Array.isArray(parsed)) {
                 // For arrays, show a summary instead of full JSON
                 return `Found ${parsed.length} items`;
-              } else if (typeof parsed === 'object') {
+              } else if (typeof parsed === "object") {
                 // For objects, show a formatted version
                 return JSON.stringify(parsed, null, 2);
               }
@@ -188,7 +190,9 @@ const MemoizedChatEntry = React.memo(
                 // For diff results, show only the summary line, not the raw content
                 <Text color="gray">⎿ {entry.content.split("\n")[0]}</Text>
               ) : (
-                <Text color="gray">⎿ {formatToolContent(entry.content, toolName)}</Text>
+                <Text color="gray">
+                  ⎿ {formatToolContent(entry.content, toolName)}
+                </Text>
               )}
             </Box>
             {shouldShowDiff && !isExecuting && (
@@ -202,7 +206,7 @@ const MemoizedChatEntry = React.memo(
       default:
         return null;
     }
-  }
+  },
 );
 
 MemoizedChatEntry.displayName = "MemoizedChatEntry";
@@ -214,8 +218,8 @@ export function ChatHistory({
   // Filter out tool_call entries with "Executing..." when confirmation is active
   const filteredEntries = isConfirmationActive
     ? entries.filter(
-        (entry) =>
-          !(entry.type === "tool_call" && entry.content === "Executing...")
+        entry =>
+          !(entry.type === "tool_call" && entry.content === "Executing..."),
       )
     : entries;
 

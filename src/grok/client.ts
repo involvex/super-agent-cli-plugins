@@ -1,5 +1,5 @@
-import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat";
+import OpenAI from "openai";
 
 export type GrokMessage = ChatCompletionMessageParam;
 
@@ -57,7 +57,8 @@ export class GrokClient {
       timeout: 360000,
     });
     const envMax = Number(process.env.GROK_MAX_TOKENS);
-    this.defaultMaxTokens = Number.isFinite(envMax) && envMax > 0 ? envMax : 1536;
+    this.defaultMaxTokens =
+      Number.isFinite(envMax) && envMax > 0 ? envMax : 1536;
     if (model) {
       this.currentModel = model;
     }
@@ -75,7 +76,7 @@ export class GrokClient {
     messages: GrokMessage[],
     tools?: GrokTool[],
     model?: string,
-    searchOptions?: SearchOptions
+    searchOptions?: SearchOptions,
   ): Promise<GrokResponse> {
     try {
       const requestPayload: any = {
@@ -105,7 +106,7 @@ export class GrokClient {
     messages: GrokMessage[],
     tools?: GrokTool[],
     model?: string,
-    searchOptions?: SearchOptions
+    searchOptions?: SearchOptions,
   ): AsyncGenerator<any, void, unknown> {
     try {
       const requestPayload: any = {
@@ -124,7 +125,7 @@ export class GrokClient {
       }
 
       const stream = (await this.client.chat.completions.create(
-        requestPayload
+        requestPayload,
       )) as any;
 
       for await (const chunk of stream) {
@@ -137,7 +138,7 @@ export class GrokClient {
 
   async search(
     query: string,
-    searchParameters?: SearchParameters
+    searchParameters?: SearchParameters,
   ): Promise<GrokResponse> {
     const searchMessage: GrokMessage = {
       role: "user",

@@ -1,12 +1,10 @@
-import { GrokClient, GrokMessage, GrokToolCall } from "../grok/client.js";
 import {
   GROK_TOOLS,
   addMCPToolsToGrokTools,
   getAllGrokTools,
   getMCPManager,
   initializeMCPServers,
-} from "../grok/tools.js";
-import { loadMCPConfig } from "../mcp/config.js";
+} from "../grok/tools";
 import {
   TextEditorTool,
   MorphEditorTool,
@@ -14,12 +12,14 @@ import {
   TodoTool,
   ConfirmationTool,
   SearchTool,
-} from "../tools/index.js";
-import { ToolResult } from "../types/index.js";
+} from "../tools/index";
+import { createTokenCounter, TokenCounter } from "../utils/token-counter";
+import { GrokClient, GrokMessage, GrokToolCall } from "../grok/client";
+import { loadCustomInstructions } from "../utils/custom-instructions";
+import { getSettingsManager } from "../utils/settings-manager";
+import { loadMCPConfig } from "../mcp/config";
+import { ToolResult } from "../types";
 import { EventEmitter } from "events";
-import { createTokenCounter, TokenCounter } from "../utils/token-counter.js";
-import { loadCustomInstructions } from "../utils/custom-instructions.js";
-import { getSettingsManager } from "../utils/settings-manager.js";
 
 export interface ChatEntry {
   type: "user" | "assistant" | "tool_result" | "tool_call";
@@ -59,7 +59,7 @@ export class GrokAgent extends EventEmitter {
     apiKey: string,
     baseURL?: string,
     model?: string,
-    maxToolRounds?: number
+    maxToolRounds?: number,
   ) {
     super();
     const manager = getSettingsManager();
@@ -194,9 +194,13 @@ Current working directory: ${process.cwd()}`,
       "changelog",
       "price",
     ];
-    if (keywords.some((k) => q.includes(k))) return true;
+    if (keywords.some(k => q.includes(k))) {
+      return true;
+    }
     // crude date pattern (e.g., 2024/2025) may imply recency
-    if (/(20\d{2})/.test(q)) return true;
+    if (/(20\d{2})/.test(q)) {
+      return true;
+    }
     return false;
   }
 
@@ -222,7 +226,7 @@ Current working directory: ${process.cwd()}`,
         undefined,
         this.isGrokModel() && this.shouldUseSearchFor(message)
           ? { search_parameters: { mode: "auto" } }
-          : { search_parameters: { mode: "off" } }
+          : { search_parameters: { mode: "off" } },
       );
 
       // Agent loop - continue until no more tool calls or max rounds reached
@@ -258,7 +262,7 @@ Current working directory: ${process.cwd()}`,
           } as any);
 
           // Create initial tool call entries to show tools are being executed
-          assistantMessage.tool_calls.forEach((toolCall) => {
+          assistantMessage.tool_calls.forEach(toolCall => {
             const toolCallEntry: ChatEntry = {
               type: "tool_call",
               content: "Executing...",
@@ -275,8 +279,9 @@ Current working directory: ${process.cwd()}`,
 
             // Update the existing tool_call entry with the result
             const entryIndex = this.chatHistory.findIndex(
-              (entry) =>
-                entry.type === "tool_call" && entry.toolCall?.id === toolCall.id
+              entry =>
+                entry.type === "tool_call" &&
+                entry.toolCall?.id === toolCall.id,
             );
 
             if (entryIndex !== -1) {
@@ -292,9 +297,9 @@ Current working directory: ${process.cwd()}`,
 
               // Also update in newEntries for return value
               const newEntryIndex = newEntries.findIndex(
-                (entry) =>
+                entry =>
                   entry.type === "tool_call" &&
-                  entry.toolCall?.id === toolCall.id
+                  entry.toolCall?.id === toolCall.id,
               );
               if (newEntryIndex !== -1) {
                 newEntries[newEntryIndex] = updatedEntry;
@@ -318,7 +323,7 @@ Current working directory: ${process.cwd()}`,
             undefined,
             this.isGrokModel() && this.shouldUseSearchFor(message)
               ? { search_parameters: { mode: "auto" } }
-              : { search_parameters: { mode: "off" } }
+              : { search_parameters: { mode: "off" } },
           );
         } else {
           // No more tool calls, add final response
@@ -379,7 +384,9 @@ Current working directory: ${process.cwd()}`,
         } else if (Array.isArray(acc[key]) && Array.isArray(value)) {
           const accArray = acc[key] as any[];
           for (let i = 0; i < value.length; i++) {
-            if (!accArray[i]) accArray[i] = {};
+            if (!accArray[i]) {
+              accArray[i] = {};
+            }
             accArray[i] = reduce(accArray[i], value[i]);
           }
         } else if (typeof acc[key] === "object" && typeof value === "object") {
@@ -393,7 +400,7 @@ Current working directory: ${process.cwd()}`,
   }
 
   async *processUserMessageStream(
-    message: string
+    message: string,
   ): AsyncGenerator<StreamingChunk, void, unknown> {
     // Create new abort controller for this request
     this.abortController = new AbortController();
@@ -409,7 +416,7 @@ Current working directory: ${process.cwd()}`,
 
     // Calculate input tokens
     let inputTokens = this.tokenCounter.countMessageTokens(
-      this.messages as any
+      this.messages as any,
     );
     yield {
       type: "token_count",
@@ -442,7 +449,7 @@ Current working directory: ${process.cwd()}`,
           undefined,
           this.isGrokModel() && this.shouldUseSearchFor(message)
             ? { search_parameters: { mode: "auto" } }
-            : { search_parameters: { mode: "off" } }
+            : { search_parameters: { mode: "off" } },
         );
         let accumulatedMessage: any = {};
         let accumulatedContent = "";
@@ -459,7 +466,9 @@ Current working directory: ${process.cwd()}`,
             return;
           }
 
-          if (!chunk.choices?.[0]) continue;
+          if (!chunk.choices?.[0]) {
+            continue;
+          }
 
           // Accumulate the message using reducer
           accumulatedMessage = this.messageReducer(accumulatedMessage, chunk);
@@ -468,7 +477,7 @@ Current working directory: ${process.cwd()}`,
           if (!toolCallsYielded && accumulatedMessage.tool_calls?.length > 0) {
             // Check if we have at least one complete tool call with a function name
             const hasCompleteTool = accumulatedMessage.tool_calls.some(
-              (tc: any) => tc.function?.name
+              (tc: any) => tc.function?.name,
             );
             if (hasCompleteTool) {
               yield {
@@ -488,7 +497,7 @@ Current working directory: ${process.cwd()}`,
               this.tokenCounter.estimateStreamingTokens(accumulatedContent) +
               (accumulatedMessage.tool_calls
                 ? this.tokenCounter.countTokens(
-                    JSON.stringify(accumulatedMessage.tool_calls)
+                    JSON.stringify(accumulatedMessage.tool_calls),
                   )
                 : 0);
             totalOutputTokens = currentOutputTokens;
@@ -507,8 +516,8 @@ Current working directory: ${process.cwd()}`,
                 tokenCount: inputTokens + totalOutputTokens,
               };
             }
+          }
         }
-      }
 
         // Add assistant entry to history
         const assistantEntry: ChatEntry = {
@@ -581,7 +590,7 @@ Current working directory: ${process.cwd()}`,
 
           // Update token count after processing all tool calls to include tool results
           inputTokens = this.tokenCounter.countMessageTokens(
-            this.messages as any
+            this.messages as any,
           );
           // Final token update after tools processed
           yield {
@@ -653,7 +662,7 @@ Current working directory: ${process.cwd()}`,
             args.path,
             args.old_str,
             args.new_str,
-            args.replace_all
+            args.replace_all,
           );
 
         case "edit_file":
@@ -667,7 +676,7 @@ Current working directory: ${process.cwd()}`,
           return await this.morphEditor.editFile(
             args.target_file,
             args.instructions,
-            args.code_edit
+            args.code_edit,
           );
 
         case "bash":
@@ -727,7 +736,7 @@ Current working directory: ${process.cwd()}`,
 
       // Extract content from result
       const output = result.content
-        .map((item) => {
+        .map(item => {
           if (item.type === "text") {
             return item.text;
           } else if (item.type === "resource") {

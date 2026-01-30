@@ -1,4 +1,4 @@
-# Grok CLI
+# @involvex/super-agent-cli
 
 A conversational AI CLI tool powered by Grok with intelligent text editor capabilities and tool usage.
 
@@ -18,28 +18,12 @@ A conversational AI CLI tool powered by Grok with intelligent text editor capabi
 ## Installation
 
 ### Prerequisites
-- Bun 1.0+ (or Node.js 18+ as fallback)
-- Grok API key from X.AI
-- (Optional, Recommended) Morph API key for Fast Apply editing
 
-### Global Installation (Recommended)
-```bash
-bun add -g @vibe-kit/grok-cli
-```
+bun add -g @involvex/super-agent-cli
 
 Or with npm (fallback):
-```bash
-npm install -g @vibe-kit/grok-cli
-```
 
-### Local Development
-```bash
-git clone <repository>
-cd grok-cli
-bun install
-bun run build
-bun link
-```
+npm install -g @involvex/super-agent-cli
 
 ## Setup
 
@@ -48,23 +32,27 @@ bun link
 2. Set up your API key (choose one method):
 
 **Method 1: Environment Variable**
+
 ```bash
 export GROK_API_KEY=your_api_key_here
 ```
 
 **Method 2: .env File**
+
 ```bash
 cp .env.example .env
 # Edit .env and add your API key
 ```
 
 **Method 3: Command Line Flag**
+
 ```bash
 grok --api-key your_api_key_here
 ```
 
 **Method 4: User Settings File**
 Create `~/.grok/user-settings.json`:
+
 ```json
 {
   "apiKey": "your_api_key_here"
@@ -76,11 +64,13 @@ Create `~/.grok/user-settings.json`:
 4. Set up your Morph API key for Fast Apply editing (choose one method):
 
 **Method 1: Environment Variable**
+
 ```bash
 export MORPH_API_KEY=your_morph_api_key_here
 ```
 
 **Method 2: .env File**
+
 ```bash
 # Add to your .env file
 MORPH_API_KEY=your_morph_api_key_here
@@ -91,17 +81,20 @@ MORPH_API_KEY=your_morph_api_key_here
 By default, the CLI uses `https://api.x.ai/v1` as the Grok API endpoint. You can configure a custom endpoint if needed (choose one method):
 
 **Method 1: Environment Variable**
+
 ```bash
 export GROK_BASE_URL=https://your-custom-endpoint.com/v1
 ```
 
 **Method 2: Command Line Flag**
+
 ```bash
 grok --api-key your_api_key_here --base-url https://your-custom-endpoint.com/v1
 ```
 
 **Method 3: User Settings File**
 Add to `~/.grok/user-settings.json`:
+
 ```json
 {
   "apiKey": "your_api_key_here",
@@ -123,6 +116,7 @@ This file stores **global settings** that apply across all projects. These setti
 - **Available Models**: List of models you can use
 
 **Example:**
+
 ```json
 {
   "apiKey": "your_api_key_here",
@@ -146,6 +140,7 @@ This file stores **project-specific settings** in your current working directory
 - **MCP Servers**: Model Context Protocol server configurations
 
 **Example:**
+
 ```json
 {
   "model": "grok-3-fast",
@@ -174,12 +169,14 @@ This means you can have different models for different projects while maintainin
 **Important**: Grok CLI uses **OpenAI-compatible APIs**. You can use any provider that implements the OpenAI chat completions standard.
 
 **Popular Providers**:
+
 - **X.AI (Grok)**: `https://api.x.ai/v1` (default)
 - **OpenAI**: `https://api.openai.com/v1`
 - **OpenRouter**: `https://openrouter.ai/api/v1`
 - **Groq**: `https://api.groq.com/openai/v1`
 
 **Example with OpenRouter**:
+
 ```json
 {
   "apiKey": "your_openrouter_key",
@@ -198,11 +195,13 @@ This means you can have different models for different projects while maintainin
 ### Interactive Mode
 
 Start the conversational AI assistant:
+
 ```bash
 grok
 ```
 
 Or specify a working directory:
+
 ```bash
 grok -d /path/to/project
 ```
@@ -210,6 +209,7 @@ grok -d /path/to/project
 ### Headless Mode
 
 Process a single prompt and exit (useful for scripting and automation):
+
 ```bash
 grok --prompt "show me the package.json file"
 grok -p "create a new file called example.js with a hello world function"
@@ -218,6 +218,7 @@ grok --prompt "complex task" --max-tool-rounds 50  # Limit tool usage for faster
 ```
 
 This mode is particularly useful for:
+
 - **CI/CD pipelines**: Automate code analysis and file operations
 - **Scripting**: Integrate AI assistance into shell scripts
 - **Terminal benchmarks**: Perfect for tools like Terminal Bench that need non-interactive execution
@@ -240,6 +241,7 @@ grok git commit-and-push --max-tool-rounds 30  # Git commands
 ```
 
 **Use Cases**:
+
 - **Fast responses**: Lower limits (10-50) for simple queries
 - **Complex automation**: Higher limits (500+) for comprehensive tasks
 - **Resource control**: Prevent runaway executions in automated environments
@@ -249,6 +251,7 @@ grok git commit-and-push --max-tool-rounds 30  # Git commands
 You can specify which AI model to use with the `--model` parameter or `GROK_MODEL` environment variable:
 
 **Method 1: Command Line Flag**
+
 ```bash
 # Use Grok models
 grok --model grok-code-fast-1
@@ -262,6 +265,7 @@ grok --model claude-sonnet-4-20250514 --base-url https://api-endpoint.com/v1
 ```
 
 **Method 2: Environment Variable**
+
 ```bash
 export GROK_MODEL=grok-code-fast-1
 grok
@@ -269,6 +273,7 @@ grok
 
 **Method 3: User Settings File**
 Add to `~/.grok/user-settings.json`:
+
 ```json
 {
   "apiKey": "your_api_key_here",
@@ -307,6 +312,7 @@ mkdir .grok
 ```
 
 Create `.grok/GROK.md` with your project-specific instructions:
+
 ```markdown
 # Custom Instructions for This Project
 
@@ -326,6 +332,7 @@ mkdir -p ~/.grok
 ```
 
 Create `~/.grok/GROK.md` with your global instructions:
+
 ```markdown
 # Global Custom Instructions for Grok CLI
 
@@ -338,6 +345,7 @@ When suggesting code changes, consider performance implications.
 #### Priority Order
 
 Grok will load custom instructions in the following priority order:
+
 1. **Project-level** (`.grok/GROK.md` in current directory) - takes highest priority
 2. **Global** (`~/.grok/GROK.md` in home directory) - fallback if no project instructions exist
 
@@ -354,12 +362,14 @@ Grok CLI supports Morph's Fast Apply model for high-speed code editing at **4,50
 ### How It Works
 
 When `MORPH_API_KEY` is configured:
+
 - **`edit_file` tool becomes available** alongside the standard `str_replace_editor`
 - **Optimized for complex edits**: Use for multi-line changes, refactoring, and large modifications
 - **Intelligent editing**: Uses abbreviated edit format with `// ... existing code ...` comments
 - **Fallback support**: Standard tools remain available if Morph is unavailable
 
 **When to use each tool:**
+
 - **`edit_file`** (Morph): Complex edits, refactoring, multi-line changes
 - **`str_replace_editor`**: Simple text replacements, single-line edits
 
@@ -381,6 +391,7 @@ Grok CLI supports MCP (Model Context Protocol) servers, allowing you to extend t
 ### Adding MCP Tools
 
 #### Add a custom MCP server:
+
 ```bash
 # Add an stdio-based MCP server
 grok mcp add my-server --transport stdio --command "bun" --args server.js
@@ -393,6 +404,7 @@ grok mcp add my-server --transport stdio --command "python" --args "-m" "my_mcp_
 ```
 
 #### Add from JSON configuration:
+
 ```bash
 grok mcp add-json my-server '{"command": "bun", "args": ["server.js"], "env": {"API_KEY": "your_key"}}'
 ```
@@ -407,6 +419,7 @@ grok mcp add linear --transport sse --url "https://mcp.linear.app/sse"
 ```
 
 This enables Linear tools like:
+
 - Create and manage Linear issues
 - Search and filter issues
 - Update issue status and assignees
