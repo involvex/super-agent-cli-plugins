@@ -12,6 +12,7 @@ import {
   getMCPManager,
   initializeMCPServers,
 } from "../core/tools";
+import { OpenAICompatibleProvider } from "../core/providers/openai-compatible";
 import { LLMMessage, LLMProvider, LLMToolCall } from "../core/llm-provider";
 import { createTokenCounter, TokenCounter } from "../utils/token-counter";
 import { loadCustomInstructions } from "../utils/custom-instructions";
@@ -67,26 +68,59 @@ export class SuperAgent extends EventEmitter {
     super();
     const manager = getSettingsManager();
     const settings = manager.loadUserSettings();
-    const savedModel = manager.getCurrentModel();
-    // Normalize provider name
-    let activeProvider = (settings.active_provider || "grok").toLowerCase();
+    let activeProviderId = (settings.active_provider || "grok").toLowerCase();
 
-    // Alias zai -> grok if needed, though we can just treat them as grok internally
-    if (activeProvider === "zai") {
-      activeProvider = "grok";
+    // Alias zai -> grok for backward compatibility
+    if (activeProviderId === "zai") {
+      activeProviderId = "grok";
     }
 
-    const modelToUse = model || savedModel || "grok-code-fast-1";
+    const providerConfig = settings.providers[activeProviderId];
+    // Fallback if config is missing (shouldn't happen with defaults, but safety check)
+    const providerType = providerConfig?.provider || activeProviderId;
+
+    // Resolve effective configuration
+    // Command line args (constructor params) override settings
+    const effectiveApiKey = apiKey || providerConfig?.api_key || "";
+    // Ensure baseURL is undefined if empty string to let SDKs use defaults
+    const effectiveBaseURL =
+      baseURL ||
+      (providerConfig?.base_url ? providerConfig.base_url : undefined);
+    const effectiveModel =
+      model ||
+      providerConfig?.model ||
+      providerConfig?.default_model ||
+      "grok-code-fast-1";
+
     this.maxToolRounds = maxToolRounds || 400;
 
     // Instantiate appropriate provider
-    if (activeProvider === "openai") {
-      this.superAgentClient = new OpenAIProvider(apiKey, baseURL, modelToUse);
-    } else if (activeProvider === "gemini" || activeProvider === "google") {
-      this.superAgentClient = new GeminiProvider(apiKey, baseURL, modelToUse);
+    if (providerType === "openai") {
+      this.superAgentClient = new OpenAIProvider(
+        effectiveApiKey,
+        effectiveBaseURL,
+        effectiveModel,
+      );
+    } else if (providerType === "gemini" || providerType === "google") {
+      this.superAgentClient = new GeminiProvider(
+        effectiveApiKey,
+        effectiveBaseURL,
+        effectiveModel,
+      );
+    } else if (providerType === "grok") {
+      this.superAgentClient = new GrokProvider(
+        effectiveApiKey,
+        effectiveBaseURL,
+        effectiveModel,
+      );
     } else {
-      // Default to grok (handles "grok", "zai", and unknowns)
-      this.superAgentClient = new GrokProvider(apiKey, baseURL, modelToUse);
+      // Default to OpenAI Compatible for all other providers (mistral, openrouter, etc.)
+      this.superAgentClient = new OpenAICompatibleProvider(
+        effectiveApiKey,
+        effectiveBaseURL || "", // Generic provider needs a URL usually, but let class handle default if empty
+        effectiveModel,
+        activeProviderId, // pass the name for logging
+      );
     }
 
     this.textEditor = new TextEditorTool();
@@ -96,7 +130,7 @@ export class SuperAgent extends EventEmitter {
     this.confirmationTool = new ConfirmationTool();
     this.search = new SearchTool();
     this.projectMap = new ProjectMapTool();
-    this.tokenCounter = createTokenCounter(modelToUse);
+    this.tokenCounter = createTokenCounter(effectiveModel);
 
     // Initialize MCP servers if configured
     this.initializeMCP();
@@ -191,8 +225,12 @@ Current working directory: ${process.cwd()}`,
   }
 
   private isGrokModel(): boolean {
-    // If provider is grok or model name contains grok
-    return this.superAgentClient.name === "grok";
+    // If provider is grok or generic provider wrapping grok (if we can tell)
+    // For now stick to simple name check
+    return (
+      this.superAgentClient.name === "grok" ||
+      this.superAgentClient.name.includes("grok")
+    );
   }
 
   // Heuristic: enable web search only when likely needed
@@ -241,8 +279,6 @@ Current working directory: ${process.cwd()}`,
     }
 
     // Keep removing messages from the beginning (after system message) until we are under the limit
-    // We should be careful not to remove a tool call without its result or vice versa,
-    // but a simple sliding window is a good start.
     while (this.messages.length > 2 && currentTokens > maxTokens) {
       this.messages.splice(1, 1);
       currentTokens = this.tokenCounter.countMessageTokens(
@@ -777,6 +813,40 @@ Current working directory: ${process.cwd()}`,
     }
   }
 
+  /**
+   * Abort the current operation
+   */
+  public abortCurrentOperation(): void {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+  }
+
+  /**
+   * Set the model to use
+   */
+  public setModel(model: string): void {
+    this.superAgentClient.setModel(model);
+    // Update token counter with new model
+    this.tokenCounter = createTokenCounter(model);
+  }
+
+  /**
+   * Get the current model
+   */
+  public getCurrentModel(): string {
+    return this.superAgentClient.getCurrentModel();
+  }
+
+  /**
+   * Execute a bash command directly
+   * This is used by the UI/CLI for direct command execution
+   */
+  public async executeBashCommand(command: string): Promise<ToolResult> {
+    return await this.bash.execute(command);
+  }
+
   private async executeMCPTool(toolCall: LLMToolCall): Promise<ToolResult> {
     try {
       const args = JSON.parse(toolCall.function.arguments);
@@ -805,42 +875,13 @@ Current working directory: ${process.cwd()}`,
 
       return {
         success: true,
-        output: output || "Success",
+        output,
       };
     } catch (error: any) {
       return {
         success: false,
         error: `MCP tool execution error: ${error.message}`,
       };
-    }
-  }
-
-  getChatHistory(): ChatEntry[] {
-    return [...this.chatHistory];
-  }
-
-  getCurrentDirectory(): string {
-    return this.bash.getCurrentDirectory();
-  }
-
-  async executeBashCommand(command: string): Promise<ToolResult> {
-    return await this.bash.execute(command);
-  }
-
-  getCurrentModel(): string {
-    return this.superAgentClient.getCurrentModel();
-  }
-
-  setModel(model: string): void {
-    this.superAgentClient.setModel(model);
-    // Update token counter for new model
-    this.tokenCounter.dispose();
-    this.tokenCounter = createTokenCounter(model);
-  }
-
-  abortCurrentOperation(): void {
-    if (this.abortController) {
-      this.abortController.abort();
     }
   }
 }

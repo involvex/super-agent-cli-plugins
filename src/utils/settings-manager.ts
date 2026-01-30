@@ -68,15 +68,15 @@ export interface UserSettings {
 export interface ProjectSettings extends Partial<UserSettings> {}
 
 const DEFAULT_USER_SETTINGS: UserSettings = {
-  active_provider: "zai",
+  active_provider: "grok",
   providers: {
-    zai: {
-      id: "zai",
-      provider: "zai",
-      model: "glm-4.7",
+    grok: {
+      id: "grok",
+      provider: "grok",
+      model: "grok-code-fast-1",
       api_key: "",
-      base_url: "https://api.z.ai/api/paas/v4",
-      default_model: "glm-4.7",
+      base_url: "https://api.x.ai/v1",
+      default_model: "grok-code-fast-1",
     },
     openai: {
       id: "openai",
@@ -89,10 +89,67 @@ const DEFAULT_USER_SETTINGS: UserSettings = {
     gemini: {
       id: "gemini",
       provider: "gemini",
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash",
       api_key: "",
       base_url: "", // Will use official SDK defaults
-      default_model: "gemini-3-flash-preview",
+      default_model: "gemini-2.0-flash",
+    },
+    mistral: {
+      id: "mistral",
+      provider: "mistral",
+      model: "mistral-large-latest",
+      api_key: "",
+      base_url: "https://api.mistral.ai/v1",
+      default_model: "mistral-large-latest",
+    },
+    openrouter: {
+      id: "openrouter",
+      provider: "openrouter",
+      model: "anthropic/claude-3.5-sonnet",
+      api_key: "",
+      base_url: "https://openrouter.ai/api/v1",
+      default_model: "anthropic/claude-3.5-sonnet",
+    },
+    minimax: {
+      id: "minimax",
+      provider: "minimax",
+      model: "abab6.5s-chat",
+      api_key: "",
+      base_url: "https://api.minimax.chat/v1",
+      default_model: "abab6.5s-chat",
+    },
+    groq: {
+      id: "groq",
+      provider: "groq",
+      model: "llama-3.3-70b-versatile",
+      api_key: "",
+      base_url: "https://api.groq.com/openai/v1",
+      default_model: "llama-3.3-70b-versatile",
+    },
+    deepseek: {
+      id: "deepseek",
+      provider: "deepseek",
+      model: "deepseek-coder",
+      api_key: "",
+      base_url: "https://api.deepseek.com/v1",
+      default_model: "deepseek-coder",
+    },
+    ollama: {
+      id: "ollama",
+      provider: "ollama",
+      model: "llama3",
+      api_key: "ollama", // key not needed usually, but some clients require non-empty
+      base_url: "http://localhost:11434/v1",
+      default_model: "llama3",
+    },
+    "workers-ai": {
+      id: "workers-ai",
+      provider: "workers-ai",
+      model: "@cf/meta/llama-3.1-70b-instruct",
+      api_key: "",
+      base_url:
+        "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/v1",
+      default_model: "@cf/meta/llama-3.1-70b-instruct",
     },
   },
   ui: {
