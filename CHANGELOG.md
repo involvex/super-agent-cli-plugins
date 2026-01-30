@@ -1,3 +1,9 @@
+## [0.0.58](https://github.com/involvex/super-agent-cli/compare/v0.0.57...v0.0.58) (2026-01-30)
+
+### Features
+
+- **ui:** add banner utilities and branding assets ([69f8ef4](https://github.com/involvex/super-agent-cli/commit/69f8ef4145fe101e71a37b346b19f78f8b5b0f6d))
+
 ## [0.0.57](https://github.com/involvex/super-agent-cli/compare/v0.0.56...v0.0.57) (2026-01-30)
 
 ### Features
