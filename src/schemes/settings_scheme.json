@@ -6,7 +6,7 @@
       "provider": "zai",
       "model": "MODEL_NAME",
       "api_key": "API_KEY",
-      "base_url": "BASE_URL" /* optional */,
+      "base_url": "BASE_URL (optional)",
       "default_model": "MODEL_NAME"
     },
     "openai": {
@@ -14,7 +14,7 @@
       "provider": "openai",
       "model": "MODEL_NAME",
       "api_key": "API_KEY",
-      "base_url": "BASE_URL" /* optional */,
+      "base_url": "BASE_URL (optional)",
       "default_model": "MODEL_NAME"
     },
     "gemini": {
@@ -22,7 +22,7 @@
       "provider": "gemini",
       "model": "MODEL_NAME",
       "api_key": "API_KEY",
-      "base_url": "BASE_URL" /* optional */,
+      "base_url": "BASE_URL (optional)",
       "default_model": "MODEL_NAME"
     },
     "claude": {
@@ -30,7 +30,7 @@
       "provider": "claude",
       "model": "MODEL_NAME",
       "api_key": "API_KEY",
-      "base_url": "BASE_URL" /* optional */,
+      "base_url": "BASE_URL (optional)",
       "default_model": "MODEL_NAME"
     },
     "openrouter": {
@@ -38,13 +38,13 @@
       "provider": "openrouter",
       "model": "MODEL_NAME",
       "api_key": "API_KEY",
-      "base_url": "BASE_URL" /* optional */,
+      "base_url": "BASE_URL (optional)",
       "default_model": "MODEL_NAME"
     }
   },
   "ui": {
     "theme": "dark",
-    "custom_theme_path": "path/to/theme.json" /* optional */,
+    "custom_theme_path": "path/to/theme.json (optional)",
     "show_memory_usage": true,
     "show_token_usage": true,
     "show_context": true,
@@ -64,7 +64,7 @@
     "allowed_plugins": ["plugin1", "plugin2", "plugin3"],
     "plugins": [
       {
-        "name": "plugin1" /* path will be ./super-agent/plugins/plugin1 inside Project folder. For global config path will be ~/.super-agent/plugins/plugin1 */
+        "name": "plugin1 /* path will be ./super-agent/plugins/plugin1 inside Project folder. For global config path will be ~/.super-agent/plugins/plugin1 */"
       }
     ]
   },
@@ -72,7 +72,7 @@
     "allowed_tools": ["tool1", "tool2", "tool3"],
     "tools": [
       {
-        "name": "tool1" /* commands like npm, bun, etc */,
+        "name": "tool1 /* commands like npm, bun, etc */",
         "enabled": true
       }
     ]
