@@ -52,7 +52,9 @@ export class FileIndexer {
   }
 
   public async saveIndex(): Promise<void> {
-    if (!this.index) {return;}
+    if (!this.index) {
+      return;
+    }
     try {
       await fs.outputFile(
         this.storagePath,
@@ -68,7 +70,9 @@ export class FileIndexer {
   }
 
   public async fullScan(options: { force?: boolean } = {}): Promise<void> {
-    if (this.isScanning) {return;}
+    if (this.isScanning) {
+      return;
+    }
     this.isScanning = true;
 
     try {
@@ -88,7 +92,9 @@ export class FileIndexer {
         const files = await fs.readdir(dir, { withFileTypes: true });
         for (const file of files) {
           if (ignoreList.includes(file.name) || file.name.startsWith(".")) {
-            if (file.name !== ".env") {continue;}
+            if (file.name !== ".env") {
+              continue;
+            }
           }
 
           const fullPath = path.join(dir, file.name);

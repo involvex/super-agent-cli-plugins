@@ -522,6 +522,175 @@ gitCommand
     }
   });
 
+// Web command
+const webCommand = program
+  .command("web")
+  .description("Start web server interface")
+  .option("--hostname <hostname>", "Server hostname", "localhost")
+  .option("--port <port>", "Server port", "3000")
+  .option("-d, --directory <dir>", "set working directory", process.cwd())
+  .option(
+    "-k, --api-key <key>",
+    "Super Agent API key (or set SUPER_AGENT_API_KEY env var)",
+  )
+  .option(
+    "-u, --base-url <url>",
+    "Super Agent API base URL (or set SUPER_AGENT_BASE_URL env var)",
+  )
+  .option(
+    "-m, --model <model>",
+    "AI model to use (e.g., GLM-4.7) (or set SUPER_AGENT_MODEL env var)",
+  )
+  .option(
+    "--max-tool-rounds <rounds>",
+    "maximum number of tool execution rounds (default: 400)",
+    "400",
+  )
+  .option("--no-open", "Don't open browser automatically")
+  .action(async options => {
+    if (options.directory) {
+      try {
+        process.chdir(options.directory);
+      } catch (error: any) {
+        console.error(
+          `Error changing directory to ${options.directory}:`,
+          error.message,
+        );
+        process.exit(1);
+      }
+    }
+
+    try {
+      const { WebServer } = await import("./web/server");
+
+      const apiKey = options.apiKey || loadApiKey();
+      const baseURL = options.baseUrl || loadBaseURL();
+      const model = options.model || loadModel();
+      const maxToolRounds = parseInt(options.maxToolRounds) || 400;
+
+      if (!apiKey) {
+        console.warn(
+          "⚠️  Warning: No API key found. Web interface may not work properly.",
+        );
+      }
+
+      if (options.apiKey || options.baseUrl) {
+        await saveCommandLineSettings(options.apiKey, options.baseUrl);
+      }
+
+      const agent = new SuperAgent(apiKey || "", baseURL, model, maxToolRounds);
+      const server = new WebServer({
+        hostname: options.hostname,
+        port: parseInt(options.port),
+        agent,
+      });
+
+      await server.start();
+
+      if (options.open !== false) {
+        await server.openBrowser();
+      }
+
+      // Keep process alive
+      process.on("SIGINT", () => {
+        server.stop();
+        process.exit(0);
+      });
+    } catch (error: any) {
+      console.error("❌ Error starting web server:", error.message);
+      process.exit(1);
+    }
+  });
+
+// Serve command (CLI + Web simultaneously)
+const serveCommand = program
+  .command("serve")
+  .description("Run both CLI and web interface simultaneously")
+  .option("--hostname <hostname>", "Server hostname", "localhost")
+  .option("--port <port>", "Server port", "3000")
+  .option("-d, --directory <dir>", "set working directory", process.cwd())
+  .option(
+    "-k, --api-key <key>",
+    "Super Agent API key (or set SUPER_AGENT_API_KEY env var)",
+  )
+  .option(
+    "-u, --base-url <url>",
+    "Super Agent API base URL (or set SUPER_AGENT_BASE_URL env var)",
+  )
+  .option(
+    "-m, --model <model>",
+    "AI model to use (e.g., GLM-4.7) (or set SUPER_AGENT_MODEL env var)",
+  )
+  .option(
+    "--max-tool-rounds <rounds>",
+    "maximum number of tool execution rounds (default: 400)",
+    "400",
+  )
+  .option("--no-open", "Don't open browser automatically")
+  .action(async options => {
+    if (options.directory) {
+      try {
+        process.chdir(options.directory);
+      } catch (error: any) {
+        console.error(
+          `Error changing directory to ${options.directory}:`,
+          error.message,
+        );
+        process.exit(1);
+      }
+    }
+
+    try {
+      const { WebServer } = await import("./web/server");
+
+      const apiKey = options.apiKey || loadApiKey();
+      const baseURL = options.baseUrl || loadBaseURL();
+      const model = options.model || loadModel();
+      const maxToolRounds = parseInt(options.maxToolRounds) || 400;
+
+      if (!apiKey) {
+        console.warn(
+          "⚠️  Warning: No API key found. Some features may not work.",
+        );
+      }
+
+      if (options.apiKey || options.baseUrl) {
+        await saveCommandLineSettings(options.apiKey, options.baseUrl);
+      }
+
+      const agent = new SuperAgent(apiKey || "", baseURL, model, maxToolRounds);
+
+      // Start web server
+      const server = new WebServer({
+        hostname: options.hostname,
+        port: parseInt(options.port),
+        agent,
+      });
+
+      await server.start();
+
+      if (options.open !== false) {
+        await server.openBrowser();
+      }
+
+      console.log("🤖 Starting CLI interface...\n");
+
+      ensureUserSettingsDirectory();
+
+      // Render CLI interface
+      render(React.createElement(ChatInterface, { agent }));
+
+      // Handle cleanup
+      process.on("SIGINT", () => {
+        server.stop();
+        process.exit(0);
+      });
+    } catch (error: any) {
+      console.error("❌ Error starting serve mode:", error.message);
+      process.exit(1);
+    }
+  });
+
 // MCP command
 program.addCommand(createMCPCommand());
 

@@ -59,15 +59,18 @@
     "marked": "^17.0.1",
     "marked-terminal": "^7.3.0",
     "mime": "^4.1.0",
+    "open": "^11.0.0",
     "openai": "^6.17.0",
     "react": "^19.2.4",
     "ripgrep-node": "^1.0.0",
-    "tiktoken": "^1.0.22"
+    "tiktoken": "^1.0.22",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.1.0",
     "@types/react": "18.3.3",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "eslint": "^9.39.2",

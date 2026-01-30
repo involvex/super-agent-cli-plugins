@@ -1,3 +1,9 @@
+## [0.0.54](https://github.com/involvex/super-agent-cli/compare/v0.0.53...v0.0.54) (2026-01-30)
+
+### Features
+
+- **indexing:** add file indexing system for faster search ([4f4d0c5](https://github.com/involvex/super-agent-cli/commit/4f4d0c58abe09a44c4afe6da757e85412e565ace))
+
 ## [0.0.53](https://github.com/involvex/super-agent-cli/compare/v0.0.52...v0.0.53) (2026-01-30)
 
 ### Features
