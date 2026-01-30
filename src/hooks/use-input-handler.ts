@@ -77,7 +77,7 @@ export function useInputHandler({
     listFilesRecursive(process.cwd()).then(setMentionSuggestions);
   }, []);
 
-  const handleSpecialKey = (key: Key): boolean => {
+  const handleSpecialKey = (char: string, key: Key): boolean => {
     // Don't handle input if confirmation dialog is active
     if (isConfirmationActive) {
       return true; // Prevent default handling
@@ -103,10 +103,9 @@ export function useInputHandler({
 
     // Handle Ctrl+Y for YOLO mode (Toggle auto-edit)
     // Ctrl+Y is usually 0x19 (\x19)
-    if (
-      (key.ctrl && (key.name === "y" || key.sequence === "\x19")) ||
-      key.sequence === "\x19"
-    ) {
+    const isCtrlY =
+      char === "\x19" || (key.ctrl && (char === "y" || char === "Y"));
+    if (isCtrlY) {
       const newAutoEditState = !autoEditEnabled;
       setAutoEditEnabled(newAutoEditState);
 
@@ -129,12 +128,9 @@ export function useInputHandler({
     }
 
     // Handle Shift+! (approximate trigger for shell mode)
-    // In many terminals, '!' comes in sequence independently of shift flag
-    if (
-      key.sequence === "!" ||
-      (key.shift && key.sequence === "!") ||
-      (key.ctrl && (key.name === "1" || key.sequence === "!"))
-    ) {
+    // Only trigger if input is empty to allow typing ! normally
+    const isShellTrigger = char === "!" && input === "";
+    if (isShellTrigger) {
       const newInput = "!";
       setInput(newInput);
       setCursorPosition(newInput.length);
@@ -143,10 +139,9 @@ export function useInputHandler({
 
     // Handle Ctrl+P for Command Palette
     // Ctrl+P is usually 0x10 (\x10)
-    if (
-      (key.ctrl && (key.name === "p" || key.sequence === "\x10")) ||
-      key.sequence === "\x10"
-    ) {
+    const isCtrlP =
+      char === "\x10" || (key.ctrl && (char === "p" || char === "P"));
+    if (isCtrlP) {
       setShowCommandPalette(true);
       setCommandPaletteQuery("");
       setSelectedPaletteIndex(0);
@@ -368,12 +363,34 @@ export function useInputHandler({
     handleInput,
   } = useEnhancedInput({
     onSubmit: handleInputSubmit,
-    onSpecialKey: handleSpecialKey,
+    onEscape: () => {
+      if (showCommandSuggestions) {
+        setShowCommandSuggestions(false);
+        setSelectedCommandIndex(0);
+      } else if (showModelSelection) {
+        setShowModelSelection(false);
+        setSelectedModelIndex(0);
+      } else if (showMentionSuggestions) {
+        setShowMentionSuggestions(false);
+      } else if (showCommandPalette) {
+        setShowCommandPalette(false);
+      } else if (isProcessing || isStreaming) {
+        agent.abortCurrentOperation();
+        setIsProcessing(false);
+        setIsStreaming(false);
+        setTokenCount(0);
+        setProcessingTime(0);
+        processingStartTime.current = 0;
+      }
+    },
     disabled: isConfirmationActive,
   });
 
   // Hook up the actual input handling
   useInput((inputChar: string, key: Key) => {
+    if (handleSpecialKey(inputChar, key)) {
+      return;
+    }
     handleInput(inputChar, key);
   });
 
@@ -795,6 +812,53 @@ Respond with ONLY the commit message, no additional text.`;
 
       setIsProcessing(false);
       setIsStreaming(false);
+      clearInput();
+      return true;
+    }
+
+    if (trimmedInput.startsWith("!")) {
+      const command = trimmedInput.slice(1).trim();
+      if (!command) {
+        clearInput();
+        return true;
+      }
+
+      const userEntry: ChatEntry = {
+        type: "user",
+        content: trimmedInput,
+        timestamp: new Date(),
+      };
+      setChatHistory(prev => [...prev, userEntry]);
+
+      try {
+        const result = await agent.executeBashCommand(command);
+
+        const commandEntry: ChatEntry = {
+          type: "tool_result",
+          content: result.success
+            ? result.output || "Command completed"
+            : result.error || "Command failed",
+          timestamp: new Date(),
+          toolCall: {
+            id: `bash_${Date.now()}`,
+            type: "function",
+            function: {
+              name: "bash",
+              arguments: JSON.stringify({ command }),
+            },
+          },
+          toolResult: result,
+        };
+        setChatHistory(prev => [...prev, commandEntry]);
+      } catch (error: any) {
+        const errorEntry: ChatEntry = {
+          type: "assistant",
+          content: `Error executing command: ${error.message}`,
+          timestamp: new Date(),
+        };
+        setChatHistory(prev => [...prev, errorEntry]);
+      }
+
       clearInput();
       return true;
     }

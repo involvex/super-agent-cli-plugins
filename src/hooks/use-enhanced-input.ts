@@ -1,16 +1,16 @@
 import {
-  deleteCharBefore,
   deleteCharAfter,
-  deleteWordBefore,
+  deleteCharBefore,
   deleteWordAfter,
+  deleteWordBefore,
   insertText,
-  moveToLineStart,
   moveToLineEnd,
-  moveToPreviousWord,
+  moveToLineStart,
   moveToNextWord,
+  moveToPreviousWord,
 } from "../utils/text-utils";
 import { useInputHistory } from "./use-input-history";
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export interface Key {
   name?: string;
@@ -45,7 +45,8 @@ export interface EnhancedInputHook {
 interface UseEnhancedInputProps {
   onSubmit?: (text: string) => void;
   onEscape?: () => void;
-  onSpecialKey?: (key: Key) => boolean; // Return true to prevent default handling
+  onSpecialKey?: (char: string, key: Key) => boolean; // Return true to prevent default handling
+
   disabled?: boolean;
   multiline?: boolean;
 }
@@ -126,7 +127,7 @@ export function useEnhancedInput({
       }
 
       // Allow special key handler to override default behavior
-      if (onSpecialKey?.(key)) {
+      if (onSpecialKey?.(inputChar, key)) {
         return;
       }
 
