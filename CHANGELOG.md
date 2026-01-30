@@ -1,3 +1,9 @@
+## [0.0.46](https://github.com/involvex/super-agent-cli/compare/v0.0.45...v0.0.46) (2026-01-30)
+
+### Features
+
+- **release:** add automated npm publishing workflow and build configuration ([bdb54a0](https://github.com/involvex/super-agent-cli/commit/bdb54a06a012d190457f81e3440f6d0f4ad5d43f))
+
 ## [0.0.45](https://github.com/involvex/super-agent-cli/compare/v0.0.44...v0.0.45) (2026-01-30)
 
 ## [0.0.44](https://github.com/involvex/super-agent-cli/compare/v0.0.43...v0.0.44) (2026-01-30)
