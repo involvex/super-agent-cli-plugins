@@ -12,6 +12,7 @@ import { useInput } from "ink";
 import { filterCommandSuggestions } from "../ui/components/command-suggestions";
 import { loadModelConfig, updateCurrentModel } from "../utils/model-config";
 import { getSettingsManager } from "../utils/settings-manager";
+import { getChatManager } from "../utils/chat-manager";
 import * as fs from "fs-extra";
 
 type AgentMode = "plan" | "code" | "debug";
@@ -470,6 +471,10 @@ export function useInputHandler({
     { command: "/models", description: "Switch Super Agent Model" },
     { command: "/config", description: "View or edit configuration" },
     { command: "/provider", description: "Manage AI providers" },
+    { command: "/chat save <name>", description: "Save current chat" },
+    { command: "/chat load <name>", description: "Load a saved chat" },
+    { command: "/chat list", description: "List saved chats" },
+    { command: "/chat delete <name>", description: "Delete a saved chat" },
     { command: "/commit-and-push", description: "AI commit & push to remote" },
     { command: "/exit", description: "Exit the application" },
   ];
@@ -654,6 +659,92 @@ Available models: ${modelNames.join(", ")}`,
         setChatHistory(prev => [...prev, errorEntry]);
       }
 
+      clearInput();
+      return true;
+    }
+
+    if (trimmedInput.startsWith("/chat ")) {
+      const args = trimmedInput.replace("/chat ", "").split(" ");
+      const action = args[0];
+      const name = args.slice(1).join(" ");
+      const chatManager = getChatManager();
+
+      try {
+        if (action === "save") {
+          if (!name) {
+            throw new Error("Chat name is required.");
+          }
+          await chatManager.saveChat(name, chatHistory);
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `✓ Chat saved as '${name}'.`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "load") {
+          if (!name) {
+            throw new Error("Chat name is required.");
+          }
+          const history = await chatManager.loadChat(name);
+          setChatHistory(history);
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `✓ Chat '${name}' loaded.`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "list") {
+          const chats = await chatManager.listChats();
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `Saved Chats:\n${chats.length ? chats.map(c => `- ${c}`).join("\n") : "No saved chats."}`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "delete") {
+          if (!name) {
+            throw new Error("Chat name is required.");
+          }
+          await chatManager.deleteChat(name);
+          setChatHistory(prev => [
+            ...prev,
+            {
+              type: "assistant",
+              content: `✓ Chat '${name}' deleted.`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else if (action === "clear") {
+          // Same as /clear
+          setChatHistory([]);
+          setIsProcessing(false);
+          setIsStreaming(false);
+          setTokenCount(0);
+          setProcessingTime(0);
+          processingStartTime.current = 0;
+          ConfirmationService.getInstance().resetSession();
+          clearInput();
+          resetHistory();
+          return true;
+        } else {
+          throw new Error(`Unknown chat action: ${action}`);
+        }
+      } catch (error: any) {
+        setChatHistory(prev => [
+          ...prev,
+          {
+            type: "assistant",
+            content: `❌ Error: ${error.message}`,
+            timestamp: new Date(),
+          },
+        ]);
+      }
       clearInput();
       return true;
     }

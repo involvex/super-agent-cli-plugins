@@ -221,6 +221,10 @@ export class SettingsManager {
     );
   }
 
+  public getStorageDirectory(): string {
+    return path.join(os.homedir(), ".super-agent");
+  }
+
   public static getInstance(): SettingsManager {
     if (!SettingsManager.instance) {
       SettingsManager.instance = new SettingsManager();
