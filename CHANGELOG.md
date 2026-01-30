@@ -1,3 +1,11 @@
+## [0.0.57](https://github.com/involvex/super-agent-cli/compare/v0.0.56...v0.0.57) (2026-01-30)
+
+### Features
+
+- **web:** add session management and enhanced UI with sidebar ([6e82cad](https://github.com/involvex/super-agent-cli/commit/6e82cadb1beb3f2e250fa69bcef5bf922506dc34))
+
+## [0.0.56](https://github.com/involvex/super-agent-cli/compare/v0.0.55...v0.0.56) (2026-01-30)
+
 ## [0.0.55](https://github.com/involvex/super-agent-cli/compare/v0.0.54...v0.0.55) (2026-01-30)
 
 ### Features
