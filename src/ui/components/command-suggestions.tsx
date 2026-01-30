@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Box, Text } from "ink";
 
 interface CommandSuggestion {
@@ -41,7 +41,19 @@ export function CommandSuggestions({
   );
 
   return (
-    <Box marginTop={1} flexDirection="column">
+    <Box
+      marginTop={1}
+      flexDirection="column"
+      borderStyle="round"
+      borderColor="magenta"
+      paddingX={1}
+    >
+      <Box marginBottom={1}>
+        <Text color="magenta" bold>
+          Commands (/):
+        </Text>
+      </Box>
+
       {filteredSuggestions.map((suggestion, index) => (
         <Box key={index} paddingLeft={1}>
           <Text

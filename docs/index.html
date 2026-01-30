@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="@involvex/super-agent-cli - A conversational AI CLI tool powered by Super Agent with intelligent text editor capabilities and tool usage."
+    />
+    <meta
+      name="keywords"
+      content="cli, agent, ai, terminal, super-agent, llm, mcp"
+    />
+    <meta name="author" content="InvolveX" />
+    <meta property="og:title" content="@involvex/super-agent-cli" />
+    <meta
+      property="og:description"
+      content="A conversational AI CLI tool powered by Super Agent with intelligent text editor capabilities and tool usage."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://involvex.github.io/super-agent-cli/"
+    />
+    <meta
+      property="og:image"
+      content="https://involvex.github.io/super-agent-cli/assets/splash.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@involvex/super-agent-cli" />
+    <meta
+      name="twitter:description"
+      content="A conversational AI CLI tool powered by Super Agent"
+    />
+    <link rel="canonical" href="https://involvex.github.io/super-agent-cli/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <title>@involvex/super-agent-cli | AI-Powered Terminal Assistant</title>
+  </head>
+  <body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="nav-container">
+        <a href="/" class="nav-brand" aria-label="Super Agent CLI - Home">
+          <svg
+            class="nav-logo"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+          <span class="nav-title">Super Agent CLI</span>
+        </a>
+
+        <button
+          class="mobile-menu-btn"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+        >
+          <span class="hamburger"></span>
+        </button>
+
+        <div class="nav-links">
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#installation" class="nav-link">Installation</a>
+          <a href="#usage" class="nav-link">Usage</a>
+          <a href="#configuration" class="nav-link">Configuration</a>
+          <a href="#mcp" class="nav-link">MCP Tools</a>
+          <a href="#api" class="nav-link">Command Reference</a>
+          <a href="#contributing" class="nav-link">Contributing</a>
+          <a
+            href="https://github.com/involvex/super-agent-cli"
+            class="nav-link nav-github"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              />
+            </svg>
+            GitHub
+          </a>
+          <button
+            class="theme-toggle"
+            aria-label="Toggle dark mode"
+            title="Toggle dark/light mode"
+          >
+            <svg
+              class="sun-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <path
+                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+              />
+            </svg>
+            <svg
+              class="moon-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+      <div class="hero-bg">
+        <div class="hero-gradient"></div>
+        <div class="hero-pattern"></div>
+      </div>
+      <div class="hero-container">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            v0.0.40
+          </div>
+          <h1 class="hero-title">Super Agent CLI</h1>
+          <p class="hero-tagline">
+            A conversational AI CLI tool powered by Super Agent with intelligent
+            text editor capabilities and tool usage.
+          </p>
+          <div class="hero-actions">
+            <a href="#installation" class="btn btn-primary">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 2v6M12 18v4M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M2 12h6M18 12h4M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24"
+                />
+              </svg>
+              Get Started
+            </a>
+            <a
+              href="https://github.com/involvex/super-agent-cli"
+              class="btn btn-secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path
+                  d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                />
+              </svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+        <div class="hero-badges">
+          <a
+            href="https://www.npmjs.com/package/@involvex/super-agent-cli"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="npm-badge"
+          >
+            <img
+              src="https://img.shields.io/npm/v/@involvex/super-agent-cli?color=green"
+              alt="npm version"
+              loading="lazy"
+            />
+          </a>
+          <a
+            href="https://www.npmjs.com/package/@involvex/super-agent-cli"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="npm-badge"
+          >
+            <img
+              src="https://img.shields.io/npm/dt/@involvex/super-agent-cli?color=blue"
+              alt="npm downloads"
+              loading="lazy"
+            />
+          </a>
+          <img
+            src="https://img.shields.io/npm/l/@involvex/super-agent-cli?color=yellow"
+            alt="MIT License"
+            loading="lazy"
+          />
+          <img
+            src="https://img.shields.io/node/v/@involvex/super-agent-cli?color=red"
+            alt="Node.js version"
+            loading="lazy"
+          />
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+      <!-- Features Section -->
+      <section id="features" class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-description">
+              Everything you need to supercharge your development workflow with
+              AI assistance.
+            </p>
+          </div>
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
+                  <path d="M12 2a10 10 0 0 1 10 10" />
+                  <circle cx="12" cy="12" r="6" />
+                </svg>
+              </div>
+              <h3 class="feature-title">Conversational AI</h3>
+              <p class="feature-description">
+                Natural language interface powered by Super Agent-3. Simply tell
+                it what you need and watch it work.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                </svg>
+              </div>
+              <h3 class="feature-title">Smart File Operations</h3>
+              <p class="feature-description">
+                AI automatically uses tools to view, create, and edit files with
+                intelligent context awareness.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+              </div>
+              <h3 class="feature-title">Morph Fast Apply</h3>
+              <p class="feature-description">
+                Optional high-speed code editing at 4,500+ tokens/sec with 98%
+                accuracy for rapid iterations.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </svg>
+              </div>
+              <h3 class="feature-title">Bash Integration</h3>
+              <p class="feature-description">
+                Execute shell commands through natural conversation. Run tests,
+                build projects, and more.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+                  />
+                </svg>
+              </div>
+              <h3 class="feature-title">Automatic Tool Selection</h3>
+              <p class="feature-description">
+                AI intelligently chooses the right tools for your requests based
+                on the task context.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+              </div>
+              <h3 class="feature-title">Interactive UI</h3>
+              <p class="feature-description">
+                Beautiful terminal interface built with Ink. Enjoy a rich,
+                interactive experience.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M4 11a9 9 0 0 1 9 9" />
+                  <path d="M4 4a16 16 0 0 1 16 16" />
+                  <circle cx="5" cy="19" r="1" />
+                </svg>
+              </div>
+              <h3 class="feature-title">MCP Tools</h3>
+              <p class="feature-description">
+                Extend capabilities with Model Context Protocol servers like
+                Linear, GitHub, and more.
+              </p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </div>
+              <h3 class="feature-title">Global Installation</h3>
+              <p class="feature-description">
+                Install and use anywhere with a single command. Available for
+                Bun and npm.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Installation Section -->
+      <section id="installation" class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Quick Installation</h2>
+            <p class="section-description">
+              Get started with Super Agent CLI in minutes.
+            </p>
+          </div>
+
+          <div class="installation-tabs">
+            <div class="tab-header" role="tablist">
+              <button
+                class="tab-btn active"
+                data-tab="bun"
+                role="tab"
+                aria-selected="true"
+                aria-controls="bun-panel"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  />
+                </svg>
+                Bun
+              </button>
+              <button
+                class="tab-btn"
+                data-tab="npm"
+                role="tab"
+                aria-selected="false"
+                aria-controls="npm-panel"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M16.5 2h-9A2.5 2.5 0 005 4.5v15A2.5 2.5 0 007.5 22h9a2.5 2.5 0 002.5-2.5v-15A2.5 2.5 0 0016.5 2zM12 18.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13z"
+                  />
+                </svg>
+                npm
+              </button>
+            </div>
+
+            <div class="tab-content">
+              <div
+                class="tab-panel active"
+                id="bun-panel"
+                role="tabpanel"
+                aria-labelledby="bun-tab"
+              >
+                <div class="code-block">
+                  <div class="code-header">
+                    <span class="code-lang">bash</span>
+                    <button
+                      class="copy-btn"
+                      aria-label="Copy command"
+                      data-copy="bun add -g @involvex/super-agent-cli"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <pre><code class="language-bash">bun add -g @involvex/super-agent-cli</code></pre>
+                </div>
+              </div>
+
+              <div
+                class="tab-panel"
+                id="npm-panel"
+                role="tabpanel"
+                aria-labelledby="npm-tab"
+              >
+                <div class="code-block">
+                  <div class="code-header">
+                    <span class="code-lang">bash</span>
+                    <button
+                      class="copy-btn"
+                      aria-label="Copy command"
+                      data-copy="npm install -g @involvex/super-agent-cli"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path
+                          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <pre><code class="language-bash">npm install -g @involvex/super-agent-cli</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="installation-note">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <p>
+              <strong>Prerequisite:</strong> Node.js 18+ and Bun or npm must be
+              installed on your system.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Usage Section -->
+      <section id="usage" class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Usage</h2>
+            <p class="section-description">
+              Interactive and headless modes for any workflow.
+            </p>
+          </div>
+
+          <div class="usage-grid">
+            <div class="usage-card">
+              <h3 class="usage-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <polyline points="4 17 10 11 4 5" />
+                  <line x1="12" y1="19" x2="20" y2="19" />
+                </svg>
+                Interactive Mode
+              </h3>
+              <p class="usage-description">
+                Start a conversational AI assistant in your terminal.
+              </p>
+              <div class="code-block">
+                <pre><code class="language-bash">super-agent
+# or with specific directory
+super-agent -d /path/to/project</code></pre>
+              </div>
+            </div>
+
+            <div class="usage-card">
+              <h3 class="usage-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+                Headless Mode
+              </h3>
+              <p class="usage-description">
+                Process a single prompt and exit for scripting and automation.
+              </p>
+              <div class="code-block">
+                <pre><code class="language-bash">super-agent --prompt "show me the package.json"
+super-agent -p "create a new file called example.js"
+super-agent --prompt "run tests" --directory /path/to/project</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="command-reference">
+            <h3 class="subsection-title">Command Line Options</h3>
+            <div class="table-wrapper">
+              <table class="options-table">
+                <thead>
+                  <tr>
+                    <th>Option</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>-V, --version</code></td>
+                    <td>Output the version number</td>
+                  </tr>
+                  <tr>
+                    <td><code>-d, --directory /path/to/project</code></td>
+                    <td>Set working directory</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <code>-u, --base-url https://api.openai.com/v1</code>
+                    </td>
+                    <td>API base URL</td>
+                  </tr>
+                  <tr>
+                    <td><code>-m, --model gpt-4o</code></td>
+                    <td>AI model to use</td>
+                  </tr>
+                  <tr>
+                    <td><code>-p, --prompt "prompt"</code></td>
+                    <td>Process a single prompt and exit (headless mode)</td>
+                  </tr>
+                  <tr>
+                    <td><code>--max-tool-rounds "rounds"</code></td>
+                    <td>
+                      Maximum number of tool execution rounds (default: 400)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>-h, --help</code></td>
+                    <td>Display help for command</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="command-reference">
+            <h3 class="subsection-title">Available Commands</h3>
+            <div class="table-wrapper">
+              <table class="options-table">
+                <thead>
+                  <tr>
+                    <th>Command</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>about</code></td>
+                    <td>Show information about the Super Agent CLI</td>
+                  </tr>
+                  <tr>
+                    <td><code>plugins list/install/uninstall "name"</code></td>
+                    <td>Manage plugins for Super Agent CLI</td>
+                  </tr>
+                  <tr>
+                    <td><code>git</code></td>
+                    <td>Git operations with AI assistance</td>
+                  </tr>
+                  <tr>
+                    <td><code>mcp</code></td>
+                    <td>Manage MCP servers</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Configuration Section -->
+      <section id="configuration" class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Configuration</h2>
+            <p class="section-description">
+              Super Agent CLI uses two types of configuration files.
+            </p>
+          </div>
+
+          <div class="config-grid">
+            <div class="config-card">
+              <h3 class="config-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                User-Level Settings
+              </h3>
+              <p class="config-path">
+                <code>~/.super-agent/settings.json</code>
+              </p>
+              <p class="config-description">
+                Global settings that apply across all projects. Stores API key,
+                base URL, and default model.
+              </p>
+              <div class="code-block">
+                <pre><code class="language-json">{
+  "active_provider": "gemini",
+  "providers": {
+    "gemini": {
+      "id": "gemini",
+      "provider": "gemini",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY",
+      "base_url": "BASE_URL (optional)",
+      "default_model": "MODEL_NAME"
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="config-card">
+              <h3 class="config-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Project-Level Settings
+              </h3>
+              <p class="config-path"><code>.super-agent/settings.json</code></p>
+              <p class="config-description">
+                Project-specific settings in your current working directory.
+                Includes MCP server configurations.
+              </p>
+              <div class="code-block">
+                <pre><code class="language-json">{
+  "active_provider": "gemini",
+  "providers": {
+    "gemini": {
+      "id": "gemini",
+      "provider": "gemini",
+      "model": "MODEL_NAME",
+      "api_key": "API_KEY"
+    }
+  },
+  "mcpServers": {
+    "linear": {
+      "name": "linear",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["@linear/mcp-server"]
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="priority-note">
+            <h4>Priority Order</h4>
+            <ol>
+              <li>
+                <strong>Project-level</strong> (`.super-agent/settings.json`) -
+                takes highest priority
+              </li>
+              <li>
+                <strong>User-level</strong> (`~/.super-agent/settings.json`) -
+                fallback for global settings
+              </li>
+              <li>
+                <strong>System default</strong> (`gemini-3-pro-preview`) - used
+                when no other settings exist
+              </li>
+            </ol>
+          </div>
+
+          <div class="api-providers">
+            <h3 class="subsection-title">Supported API Providers</h3>
+            <p class="providers-description">
+              Super Agent CLI uses <strong>OpenAI-compatible APIs</strong>. Any
+              provider implementing the OpenAI chat completions standard works.
+            </p>
+            <div class="providers-grid">
+              <div class="provider-card">
+                <h4>Google (Gemini)</h4>
+                <code
+                  >https://generativelanguage.googleapis.com/v1beta/openai</code
+                >
+                <span class="provider-badge default">Default</span>
+              </div>
+              <div class="provider-card">
+                <h4>OpenAI</h4>
+                <code>https://api.openai.com/v1</code>
+              </div>
+              <div class="provider-card">
+                <h4>OpenRouter</h4>
+                <code>https://openrouter.ai/api/v1</code>
+              </div>
+              <div class="provider-card">
+                <h4>Groq</h4>
+                <code>https://api.groq.com/openai/v1</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MCP Tools Section -->
+      <section id="mcp" class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">MCP Tools</h2>
+            <p class="section-description">
+              Extend capabilities with Model Context Protocol servers.
+            </p>
+          </div>
+
+          <div class="mcp-commands">
+            <h3 class="subsection-title">Managing MCP Servers</h3>
+            <div class="code-block">
+              <pre><code class="language-bash"># Add an stdio-based MCP server
+super-agent mcp add my-server --transport stdio --command "bun" --args server.js
+
+# Add an HTTP-based MCP server
+super-agent mcp add my-server --transport http --url "http://localhost:3000"
+
+# Add with environment variables
+super-agent mcp add my-server --transport stdio --command "python" --args "-m" "my_mcp_server" --env "API_KEY=your_key"
+
+# Add from JSON configuration
+super-agent mcp add-json my-server '{"command": "bun", "args": ["server.js"], "env": {"API_KEY": "your_key"}}'
+
+# List all configured servers
+super-agent mcp list
+
+# Test server connection
+super-agent mcp test server-name
+
+# Remove a server
+super-agent mcp remove server-name</code></pre>
+            </div>
+          </div>
+
+          <div class="mcp-transports">
+            <h3 class="subsection-title">Available Transport Types</h3>
+            <div class="transports-grid">
+              <div class="transport-card">
+                <h4>stdio</h4>
+                <p>Run MCP server as a subprocess (most common)</p>
+              </div>
+              <div class="transport-card">
+                <h4>http</h4>
+                <p>Connect to HTTP-based MCP server</p>
+              </div>
+              <div class="transport-card">
+                <h4>sse</h4>
+                <p>Connect via Server-Sent Events</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="linear-example">
+            <h3 class="subsection-title">Linear Integration Example</h3>
+            <p>To add Linear MCP tools for project management:</p>
+            <div class="code-block">
+              <pre><code class="language-bash"># Add Linear MCP server
+super-agent mcp add linear --transport sse --url "https://mcp.linear.app/sse"</code></pre>
+            </div>
+            <p>This enables Linear tools like:</p>
+            <ul class="feature-list">
+              <li>Create and manage Linear issues</li>
+              <li>Search and filter issues</li>
+              <li>Update issue status and assignees</li>
+              <li>Access team and project information</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Command Reference Section -->
+      <section id="api" class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Command Reference</h2>
+            <p class="section-description">
+              Complete command and option reference.
+            </p>
+          </div>
+
+          <!-- <div class="api-section">
+          <h3 class="subsection-title">Environment Variables</h3>
+          <div class="table-wrapper">
+            <table class="options-table">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>SUPER_AGENT_API_KEY</code></td>
+                  <td>Your Super Agent API key</td>
+                </tr>
+                <tr>
+                  <td><code>SUPER_AGENT_BASE_URL</code></td>
+                  <td>Custom API endpoint (if needed)</td>
+                </tr>
+                <tr>
+                  <td><code>SUPER_AGENT_MODEL</code></td>
+                  <td>Default AI model to use</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div> -->
+
+          <div class="api-section">
+            <h3 class="subsection-title">Tool Execution Control</h3>
+            <p>Control tool execution rounds for different use cases:</p>
+            <div class="code-block">
+              <pre><code class="language-bash"># Limit tool rounds for faster execution on simple tasks
+super-agent --max-tool-rounds 10 --prompt "show me the current directory"
+
+# Increase limit for very complex tasks (use with caution)
+super-agent --max-tool-rounds 1000 --prompt "comprehensive code refactoring"
+
+# Works with all modes
+super-agent --max-tool-rounds 20  # Interactive mode
+super-agent git commit-and-push --max-tool-rounds 30  # Git commands</code></pre>
+            </div>
+            <div class="priority-note">
+              <h4>Use Cases</h4>
+              <ul>
+                <li>
+                  <strong>Fast responses:</strong> Lower limits (10-50) for
+                  simple queries
+                </li>
+                <li>
+                  <strong>Complex automation:</strong> Higher limits (500+) for
+                  comprehensive tasks
+                </li>
+                <li>
+                  <strong>Resource control:</strong> Prevent runaway executions
+                  in automated environments
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contributing Section -->
+      <section id="contributing" class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">Contributing</h2>
+            <p class="section-description">
+              Help make Super Agent CLI even better.
+            </p>
+          </div>
+
+          <div class="contributing-grid">
+            <div class="contributing-card">
+              <h3 class="contributing-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <path d="M14 2v6h6M12 18v-6M9 15l3-3 3 3" />
+                </svg>
+                Development Setup
+              </h3>
+              <div class="code-block">
+                <pre><code class="language-bash"># Install dependencies
+bun install
+
+# Development mode
+bun run dev
+
+# Build project
+bun run build
+
+# Run linter
+bun run lint
+
+# Type check
+bun run typecheck</code></pre>
+              </div>
+            </div>
+
+            <div class="contributing-card">
+              <h3 class="contributing-title">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4M12 8h.01" />
+                </svg>
+                Prerequisites
+              </h3>
+              <ul class="prereq-list">
+                <li>Bun 1.0+</li>
+                <li>Node.js 18+</li>
+                <li>TypeScript knowledge</li>
+                <li>Understanding of LLM APIs</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="architecture-section">
+            <h3 class="subsection-title">Architecture</h3>
+            <div class="architecture-grid">
+              <div class="arch-card">
+                <h4>Agent</h4>
+                <p>Core command processing and execution logic</p>
+              </div>
+              <div class="arch-card">
+                <h4>Tools</h4>
+                <p>Text editor and bash tool implementations</p>
+              </div>
+              <div class="arch-card">
+                <h4>UI</h4>
+                <p>Ink-based terminal interface components</p>
+              </div>
+              <div class="arch-card">
+                <h4>Types</h4>
+                <p>TypeScript definitions for the entire system</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- License Section -->
+      <section id="license" class="section section-alt">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">License</h2>
+            <p class="section-description">
+              MIT License - Open Source forever.
+            </p>
+          </div>
+
+          <div class="license-content">
+            <div class="license-badge">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+              </svg>
+              <span>MIT License</span>
+            </div>
+            <p class="license-text">
+              Permission is hereby granted, free of charge, to any person
+              obtaining a copy of this software and associated documentation
+              files (the "Software"), to deal in the Software without
+              restriction, including without limitation the rights to use, copy,
+              modify, merge, publish, distribute, sublicense, and/or sell copies
+              of the Software, and to permit persons to whom the Software is
+              furnished to do so, subject to the following conditions:
+            </p>
+            <p class="license-text">
+              The above copyright notice and this permission notice shall be
+              included in all copies or substantial portions of the Software.
+            </p>
+            <p class="license-text">
+              THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+              EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+              MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+              NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+              HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+              WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+              OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+              DEALINGS IN THE SOFTWARE.
+            </p>
+            <a
+              href="https://github.com/involvex/super-agent-cli/blob/main/LICENSE"
+              class="btn btn-secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View Full License
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <a href="/" class="footer-logo">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              <span>Super Agent CLI</span>
+            </a>
+            <p class="footer-description">
+              An open-source AI agent that brings the power of Super Agent
+              directly into your terminal.
+            </p>
+          </div>
+          <div class="footer-links">
+            <div class="footer-column">
+              <h4>Documentation</h4>
+              <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#usage">Usage</a></li>
+                <li><a href="#configuration">Configuration</a></li>
+              </ul>
+            </div>
+            <div class="footer-column">
+              <h4>Resources</h4>
+              <ul>
+                <li><a href="#mcp">MCP Tools</a></li>
+                <li><a href="#api">Command Reference</a></li>
+                <li><a href="#contributing">Contributing</a></li>
+                <li>
+                  <a
+                    href="https://github.com/involvex/super-agent-cli"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >GitHub</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="footer-column">
+              <h4>Community</h4>
+              <ul>
+                <li>
+                  <a
+                    href="https://github.com/involvex/super-agent-cli/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Issues</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/sponsors/involvex"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Sponsor</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 InvolveX. All rights reserved.</p>
+          <p>Released under the <a href="#license">MIT License</a></p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>

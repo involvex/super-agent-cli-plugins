@@ -24,15 +24,29 @@ export function MentionSuggestions({
     [suggestions, query],
   );
 
+  const displayedSuggestions = filteredSuggestions.slice(0, 8);
+
   return (
-    <Box marginTop={1} flexDirection="column">
+    <Box
+      flexDirection="column"
+      borderStyle="round"
+      borderColor="cyan"
+      paddingX={1}
+      width={
+        process.stdout.columns ? Math.min(100, process.stdout.columns - 4) : 100
+      }
+    >
       <Box marginBottom={1}>
         <Text color="cyan" bold>
           Mention file or folder (@):
         </Text>
       </Box>
-      {filteredSuggestions.map((suggestion, index) => (
+
+      {displayedSuggestions.map((suggestion, index) => (
         <Box key={index} paddingLeft={1}>
+          <Box width={3}>
+            <Text>{index === selectedIndex ? "❯" : " "}</Text>
+          </Box>
           <Text
             color={
               index === selectedIndex
@@ -47,6 +61,14 @@ export function MentionSuggestions({
           </Text>
         </Box>
       ))}
+      {filteredSuggestions.length > 8 && (
+        <Box paddingLeft={1}>
+          <Text color="gray">
+            ... and {filteredSuggestions.length - 8} more
+          </Text>
+        </Box>
+      )}
+
       <Box marginTop={1}>
         <Text color="gray" dimColor>
           ↑↓ navigate • Enter/Tab select • Esc cancel

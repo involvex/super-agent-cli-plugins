@@ -24,43 +24,65 @@ export function CommandPalette({
     [files, query],
   );
 
+  const displayedFiles = filteredFiles.slice(0, 10);
+
   return (
     <Box
       flexDirection="column"
-      position="absolute"
       borderStyle="round"
       borderColor="magenta"
       paddingX={1}
-      width={60}
+      width={
+        process.stdout.columns ? Math.min(80, process.stdout.columns - 4) : 80
+      }
     >
-      <Box marginBottom={1}>
-        <Text color="magenta" bold>
-          Command Palette / File Search
+      <Box marginBottom={1} justifyContent="space-between">
+        <Text color="cyan" bold>
+          🔍 Command Palette / File Search
+        </Text>
+        <Text color="gray">{filteredFiles.length} files found</Text>
+      </Box>
+      <Box
+        marginBottom={1}
+        borderStyle="single"
+        borderColor="gray"
+        paddingX={1}
+      >
+        <Text color="gray">Query: </Text>
+        <Text color="white" bold>
+          {query || "Search files..."}
         </Text>
       </Box>
-      <Box marginBottom={1}>
-        <Text color="gray">Query: </Text>
-        <Text color="white">{query || "Search files..."}</Text>
-      </Box>
       <Box flexDirection="column">
-        {filteredFiles.map((file, index) => (
+        {displayedFiles.map((file, index) => (
           <Box key={index} paddingLeft={1}>
+            <Box width={3}>
+              <Text>{index === selectedIndex ? "❯" : " "}</Text>
+            </Box>
             <Text
               color={
                 index === selectedIndex
-                  ? "black"
+                  ? "white"
                   : file.isDirectory
                     ? "blue"
                     : "white"
               }
               backgroundColor={index === selectedIndex ? "magenta" : undefined}
+              bold={index === selectedIndex}
             >
               {file.isDirectory ? "📁" : "📄"} {file.path}
             </Text>
           </Box>
         ))}
       </Box>
-      {filteredFiles.length === 0 && <Text color="gray">No files found.</Text>}
+      {filteredFiles.length === 0 && (
+        <Box padding={1}>
+          <Text color="gray" italic>
+            No files found matching "{query}"
+          </Text>
+        </Box>
+      )}
+
       <Box
         marginTop={1}
         borderStyle="single"

@@ -329,97 +329,103 @@ function ChatInterfaceWithAgent({
 
       {!confirmationOptions && (
         <>
-          <LoadingSpinner
-            isActive={isProcessing || isStreaming}
-            processingTime={processingTime}
-            tokenCount={tokenCount}
-          />
-
-          <ChatInput
-            input={input}
-            cursorPosition={cursorPosition}
-            isProcessing={isProcessing}
-            isStreaming={isStreaming}
-          />
-
-          <Box flexDirection="row" marginTop={1} flexWrap="wrap">
-            <Box marginRight={2}>
-              <Text color="cyan">
-                {autoEditEnabled ? "🚀" : "⏸"} yolo:{" "}
-                {autoEditEnabled ? "on" : "off"}{" "}
-              </Text>
-              <Text color="gray" dimColor>
-                (ctrl+y)
-              </Text>
+          {showCommandPalette ? (
+            <Box flexDirection="column" marginTop={1}>
+              <CommandPalette
+                files={mentionSuggestions}
+                query={commandPaletteQuery}
+                selectedIndex={selectedPaletteIndex}
+                isVisible={showCommandPalette}
+              />
             </Box>
+          ) : (
+            <>
+              <LoadingSpinner
+                isActive={isProcessing || isStreaming}
+                processingTime={processingTime}
+                tokenCount={tokenCount}
+              />
 
-            <Box marginRight={2}>
-              <Text
-                color={
-                  agentMode === "plan"
-                    ? "cyan"
-                    : agentMode === "debug"
-                      ? "magenta"
-                      : "green"
-                }
-                bold
-              >
-                ◈ {agentMode.toUpperCase()}
-              </Text>
-              <Text color="gray" dimColor>
-                {" "}
-                (shift+tab)
-              </Text>
-            </Box>
+              <ChatInput
+                input={input}
+                cursorPosition={cursorPosition}
+                isProcessing={isProcessing}
+                isStreaming={isStreaming}
+              />
 
-            <Box marginRight={2}>
-              <Text color="magenta">🔍 palette </Text>
-              <Text color="gray" dimColor>
-                (ctrl+p)
-              </Text>
-            </Box>
+              <Box flexDirection="row" marginTop={1} flexWrap="wrap">
+                <Box marginRight={2}>
+                  <Text color="cyan">
+                    {autoEditEnabled ? "🚀" : "⏸"} yolo:{" "}
+                    {autoEditEnabled ? "on" : "off"}{" "}
+                  </Text>
+                  <Text color="gray" dimColor>
+                    (ctrl+y)
+                  </Text>
+                </Box>
 
-            <Box marginRight={2}>
-              <Text color="cyan">🐚 shell </Text>
-              <Text color="gray" dimColor>
-                (!)
-              </Text>
-            </Box>
+                <Box marginRight={2}>
+                  <Text
+                    color={
+                      agentMode === "plan"
+                        ? "cyan"
+                        : agentMode === "debug"
+                          ? "magenta"
+                          : "green"
+                    }
+                    bold
+                  >
+                    ◈ {agentMode.toUpperCase()}
+                  </Text>
+                  <Text color="gray" dimColor>
+                    {" "}
+                    (shift+tab)
+                  </Text>
+                </Box>
 
-            <Box marginRight={2}>
-              <Text color="yellow">≋ {agent.getCurrentModel()}</Text>
-            </Box>
+                <Box marginRight={2}>
+                  <Text color="magenta">🔍 palette </Text>
+                  <Text color="gray" dimColor>
+                    (ctrl+p)
+                  </Text>
+                </Box>
 
-            <MCPStatus />
-          </Box>
+                <Box marginRight={2}>
+                  <Text color="cyan">🐚 shell </Text>
+                  <Text color="gray" dimColor>
+                    (!)
+                  </Text>
+                </Box>
 
-          <MentionSuggestions
-            suggestions={mentionSuggestions}
-            query={mentionQuery}
-            selectedIndex={selectedMentionIndex}
-            isVisible={showMentionSuggestions}
-          />
+                <Box marginRight={2}>
+                  <Text color="yellow">≋ {agent.getCurrentModel()}</Text>
+                </Box>
 
-          <CommandPalette
-            files={mentionSuggestions}
-            query={commandPaletteQuery}
-            selectedIndex={selectedPaletteIndex}
-            isVisible={showCommandPalette}
-          />
+                <MCPStatus />
+              </Box>
 
-          <CommandSuggestions
-            suggestions={commandSuggestions}
-            input={input}
-            selectedIndex={selectedCommandIndex}
-            isVisible={showCommandSuggestions}
-          />
+              <MentionSuggestions
+                suggestions={mentionSuggestions}
+                query={mentionQuery}
+                selectedIndex={selectedMentionIndex}
+                isVisible={showMentionSuggestions}
+              />
 
-          <ModelSelection
-            models={availableModels}
-            selectedIndex={selectedModelIndex}
-            isVisible={showModelSelection}
-            currentModel={agent.getCurrentModel()}
-          />
+              <CommandSuggestions
+                suggestions={commandSuggestions}
+                input={input}
+                selectedIndex={selectedCommandIndex}
+                isVisible={showCommandSuggestions}
+              />
+
+              <ModelSelection
+                models={availableModels}
+                selectedIndex={selectedModelIndex}
+                isVisible={showModelSelection}
+                currentModel={agent.getCurrentModel()}
+              />
+            </>
+          )}
         </>
       )}
     </Box>

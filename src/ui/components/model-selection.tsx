@@ -22,12 +22,19 @@ export function ModelSelection({
   }
 
   return (
-    <Box marginTop={1} flexDirection="column">
+    <Box
+      marginTop={1}
+      flexDirection="column"
+      borderStyle="round"
+      borderColor="cyan"
+      paddingX={1}
+    >
       <Box marginBottom={1}>
-        <Text color="cyan">
+        <Text color="cyan" bold>
           Select Super Agent Model (current: {currentModel}):
         </Text>
       </Box>
+
       {models.map((modelOption, index) => (
         <Box key={index} paddingLeft={1}>
           <Text
