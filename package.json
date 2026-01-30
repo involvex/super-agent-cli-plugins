@@ -8,6 +8,11 @@
     "text-editor",
     "ai"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/involvex/super-agent-cli.git"
+  },
+  "funding": "https://github.com/sponsors/involvex",
   "license": "MIT",
   "author": "InvolveX",
   "type": "module",
@@ -73,5 +78,8 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "preferGlobal": true
+  "preferGlobal": true,
+  "sponsor": {
+    "url": "https://github.com/sponsors/involvex"
+  }
 }

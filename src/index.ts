@@ -424,6 +424,9 @@ const aboutCommand = program
   .action(() => {
     console.log(pkg.name + " " + pkg.version);
     console.log(pkg.description);
+    console.log("\nMaintained by: " + pkg.author);
+    console.log("\nSource code: " + pkg.repository.url);
+    console.log("\nFunding: " + pkg.funding);
     process.exit(0);
   });
 
