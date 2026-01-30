@@ -58,7 +58,7 @@ export class MCPManager extends EventEmitter {
         },
         {
           capabilities: {
-            tools: {},
+            sampling: {},
           },
         },
       );

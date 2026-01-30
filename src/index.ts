@@ -70,16 +70,29 @@ async function saveCommandLineSettings(
 ): Promise<void> {
   try {
     const manager = getSettingsManager();
+    const settings = manager.loadUserSettings();
+    const activeProviderId = settings.active_provider;
 
-    // Update with command line values
+    // Ensure active provider exists
+    if (!settings.providers[activeProviderId]) {
+      // Fallback or create if missing (though loadUserSettings should have defaults)
+      return;
+    }
+
     if (apiKey) {
-      manager.updateUserSetting("apiKey", apiKey);
-      console.log("✅ API key saved to ~/.super-agent/settings.json");
+      settings.providers[activeProviderId].api_key = apiKey;
+      console.log(
+        `✅ API key saved for provider '${activeProviderId}' to ~/.super-agent/settings.json`,
+      );
     }
     if (baseURL) {
-      manager.updateUserSetting("baseURL", baseURL);
-      console.log("✅ Base URL saved to ~/.super-agent/settings.json");
+      settings.providers[activeProviderId].base_url = baseURL;
+      console.log(
+        `✅ Base URL saved for provider '${activeProviderId}' to ~/.super-agent/settings.json`,
+      );
     }
+
+    manager.saveUserSettings(settings);
   } catch (error) {
     console.warn(
       "⚠️ Could not save settings to file:",
@@ -324,7 +337,7 @@ program
   )
   .option(
     "-m, --model <model>",
-    "AI model to use (e.g., Super Agent-code-fast-1, Super Agent-4-latest) (or set SUPER_AGENT_MODEL env var)",
+    "AI model to use (e.g., GLM-4.7) (or set SUPER_AGENT_MODEL env var)",
   )
   .option(
     "-p, --prompt <prompt>",
@@ -355,9 +368,14 @@ program
       const model = options.model || loadModel();
       const maxToolRounds = parseInt(options.maxToolRounds) || 400;
 
-      if (!apiKey) {
+      if (!apiKey && !options.prompt) {
+        console.warn(
+          "⚠️  Warning: No API key found. Some features may not work. Use /config or set SUPER_AGENT_API_KEY.",
+        );
+      } else if (!apiKey && options.prompt) {
+        // In headless mode we definitely need the key
         console.error(
-          '❌ Error: API key required. Set SUPER_AGENT_API_KEY environment variable, use --api-key flag, or set "apiKey" field in ~/.super-agent/settings.json',
+          "❌ Error: API key required for headless mode. Set SUPER_AGENT_API_KEY environment variable, use --api-key flag, or configure via interactive mode.",
         );
         process.exit(1);
       }
@@ -369,9 +387,10 @@ program
 
       // Headless mode: process prompt and exit
       if (options.prompt) {
+        // We know apiKey exists here because of check above
         await processPromptHeadless(
           options.prompt,
-          apiKey,
+          apiKey!,
           baseURL,
           model,
           maxToolRounds,
@@ -380,7 +399,8 @@ program
       }
 
       // Interactive mode: launch UI
-      const agent = new SuperAgent(apiKey, baseURL, model, maxToolRounds);
+      // Pass apiKey even if undefined, SuperAgent should handle it or fail gracefully later
+      const agent = new SuperAgent(apiKey || "", baseURL, model, maxToolRounds);
       console.log("🤖 Starting Super Agent CLI Conversational Assistant...\n");
 
       ensureUserSettingsDirectory();
@@ -416,7 +436,7 @@ gitCommand
   )
   .option(
     "-m, --model <model>",
-    "AI model to use (e.g., Super Agent-code-fast-1, Super Agent-4-latest) (or set SUPER_AGENT_MODEL env var)",
+    "AI model to use (e.g., GLM-4.7) (or set SUPER_AGENT_MODEL env var)",
   )
   .option(
     "--max-tool-rounds <rounds>",
@@ -445,7 +465,7 @@ gitCommand
 
       if (!apiKey) {
         console.error(
-          "❌ Error: API key required. Set SUPER_AGENT_API_KEY environment variable, use --api-key flag, or save to ~/.super-agent/settings.json",
+          "❌ Error: API key required for git operations. Set SUPER_AGENT_API_KEY environment variable.",
         );
         process.exit(1);
       }
@@ -455,7 +475,7 @@ gitCommand
         await saveCommandLineSettings(options.apiKey, options.baseUrl);
       }
 
-      await handleCommitAndPushHeadless(apiKey, baseURL, model, maxToolRounds);
+      await handleCommitAndPushHeadless(apiKey!, baseURL, model, maxToolRounds);
     } catch (error: any) {
       console.error("❌ Error during git commit-and-push:", error.message);
       process.exit(1);

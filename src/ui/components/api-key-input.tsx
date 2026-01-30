@@ -57,8 +57,20 @@ export default function ApiKeyInput({ onApiKeySet }: ApiKeyInputProps) {
       // Save to user settings
       try {
         const manager = getSettingsManager();
-        manager.updateUserSetting("apiKey", apiKey);
-        console.log(`\n✅ API key saved to ~/.super-agent/settings.json`);
+        const settings = manager.loadUserSettings();
+        const active = settings.active_provider;
+
+        if (settings.providers && settings.providers[active]) {
+          settings.providers[active].api_key = apiKey;
+          manager.saveUserSettings(settings);
+          console.log(
+            `\n✅ API key saved for ${active} to ~/.super-agent/settings.json`,
+          );
+        } else {
+          console.log(
+            "\n⚠️ Active provider not found in settings, could not save key.",
+          );
+        }
       } catch (error) {
         console.log("\n⚠️ Could not save API key to settings file");
         console.log("API key set for current session only");
@@ -82,9 +94,11 @@ export default function ApiKeyInput({ onApiKeySet }: ApiKeyInputProps) {
 
   return (
     <Box flexDirection="column" paddingX={2} paddingY={1}>
-      <Text color="yellow">🔑 Grok API Key Required</Text>
+      <Text color="yellow">🔑 Super Agent API Key Required</Text>
       <Box marginBottom={1}>
-        <Text color="gray">Please enter your Grok API key to continue:</Text>
+        <Text color="gray">
+          Please enter your Super Agent API key to continue:
+        </Text>
       </Box>
 
       <Box borderStyle="round" borderColor="blue" paddingX={1} marginBottom={1}>

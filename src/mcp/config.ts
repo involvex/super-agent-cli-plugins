@@ -12,7 +12,7 @@ export function loadMCPConfig(): MCPConfig {
   const manager = getSettingsManager();
   const projectSettings = manager.loadProjectSettings();
   const servers = projectSettings.mcpServers
-    ? Object.values(projectSettings.mcpServers)
+    ? (Object.values(projectSettings.mcpServers) as MCPServerConfig[])
     : [];
   return { servers };
 }

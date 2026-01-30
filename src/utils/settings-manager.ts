@@ -3,84 +3,102 @@ import * as os from "os";
 import * as fs from "fs";
 
 /**
- * Current settings version - increment this when adding new models or changing settings structure
- * This triggers automatic migration for existing users
+ * Current settings version
  */
 const SETTINGS_VERSION = 2;
 
-/**
- * User-level settings stored in ~/.super-agent/settings.json
- * These are global settings that apply across all projects
- */
+export interface ProviderConfig {
+  id: string;
+  provider: string;
+  model: string;
+  api_key: string;
+  base_url?: string;
+  default_model?: string;
+}
+
 export interface UserSettings {
-  apiKey?: string; // Super Agent API key
-  baseURL?: string; // API base URL
-  defaultModel?: string; // User's preferred default model
-  models?: string[]; // Available models list
-  settingsVersion?: number; // Version for migration tracking
+  active_provider: string;
+  providers: Record<string, ProviderConfig>;
+  ui: {
+    theme: string;
+    custom_theme_path?: string;
+    show_memory_usage?: boolean;
+    show_token_usage?: boolean;
+    show_context?: boolean;
+    showModelInfoInChat?: boolean;
+  };
+  mcpServers?: Record<string, any>;
+  plugins?: {
+    allowed_plugins: string[];
+    plugins: Array<{ name: string }>;
+  };
+  tools?: {
+    allowed_tools: string[];
+    tools: Array<{ name: string; enabled: boolean }>;
+  };
+  hooks?: Record<string, any>;
+  auto_edit?: {
+    enabled: boolean;
+    default_state: string;
+  };
+  modes?: {
+    active_mode: string;
+    default_mode: string;
+    modes: Array<{
+      name: string;
+      description: string;
+      enabled: boolean;
+      prompt: string;
+    }>;
+  };
+  env?: Record<string, string>;
+  context?: {
+    fileName: string[];
+  };
+  experimental?: {
+    checkpointing: {
+      enabled: boolean;
+      auto_save: boolean;
+      auto_load: boolean;
+    };
+  };
+  settingsVersion?: number;
 }
 
-/**
- * Project-level settings stored in .super-agent/settings.json
- * These are project-specific settings
- */
-export interface ProjectSettings {
-  model?: string; // Current model for this project
-  mcpServers?: Record<string, any>; // MCP server configurations
-}
+export interface ProjectSettings extends Partial<UserSettings> {}
 
-/**
- * Default values for user settings
- */
-const DEFAULT_USER_SETTINGS: Partial<UserSettings> = {
-  baseURL: "https://api.x.ai/v1",
-  defaultModel: "grok-code-fast-1",
-  models: [
-    // Super Agent 4.1 Fast models (2M context, latest - November 2025)
-    "grok-4-1-fast-reasoning",
-    "grok-4-1-fast-non-reasoning",
-    // Grok 4 Fast models (2M context)
-    "grok-4-fast-reasoning",
-    "grok-4-fast-non-reasoning",
-    // Grok 4 flagship (256K context)
-    "grok-4",
-    "grok-4-latest",
-    // Grok Code (optimized for coding, 256K context)
-    "grok-code-fast-1",
-    // Super Agent 3 models (131K context)
-    "grok-3",
-    "grok-3-latest",
-    "grok-3-fast",
-    "grok-3-mini",
-    "grok-3-mini-fast",
-  ],
+const DEFAULT_USER_SETTINGS: UserSettings = {
+  active_provider: "zai",
+  providers: {
+    zai: {
+      id: "zai",
+      provider: "zai",
+      model: "GLM-4.7",
+      api_key: "",
+      base_url: "https://api.z.ai/api/v1",
+      default_model: "GLM-4.7",
+    },
+  },
+  ui: {
+    theme: "dark",
+    showModelInfoInChat: true,
+  },
+  settingsVersion: SETTINGS_VERSION,
 };
 
-/**
- * Default values for project settings
- */
-const DEFAULT_PROJECT_SETTINGS: Partial<ProjectSettings> = {
-  model: "grok-code-fast-1",
-};
+const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {};
 
-/**
- * Unified settings manager that handles both user-level and project-level settings
- */
 export class SettingsManager {
   private static instance: SettingsManager;
-
   private userSettingsPath: string;
   private projectSettingsPath: string;
 
   private constructor() {
-    // User settings path: ~/.super-agent/settings.json
     this.userSettingsPath = path.join(
       os.homedir(),
       ".super-agent",
       "settings.json",
     );
-
-    // Project settings path: .super-agent/settings.json (in current working directory)
     this.projectSettingsPath = path.join(
       process.cwd(),
       ".super-agent",
@@ -88,9 +106,6 @@ export class SettingsManager {
     );
   }
 
-  /**
-   * Get singleton instance
-   */
   public static getInstance(): SettingsManager {
     if (!SettingsManager.instance) {
       SettingsManager.instance = new SettingsManager();
@@ -98,9 +113,6 @@ export class SettingsManager {
     return SettingsManager.instance;
   }
 
-  /**
-   * Ensure directory exists for a given file path
-   */
   private ensureDirectoryExists(filePath: string): void {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -108,13 +120,9 @@ export class SettingsManager {
     }
   }
 
-  /**
-   * Load user settings from ~/.super-agent/settings.json
-   */
   public loadUserSettings(): UserSettings {
     try {
       if (!fs.existsSync(this.userSettingsPath)) {
-        // Create default user settings if file doesn't exist
         const newSettings = {
           ...DEFAULT_USER_SETTINGS,
           settingsVersion: SETTINGS_VERSION,
@@ -122,98 +130,31 @@ export class SettingsManager {
         this.saveUserSettings(newSettings);
         return newSettings;
       }
-
       const content = fs.readFileSync(this.userSettingsPath, "utf-8");
       const settings = JSON.parse(content);
-
-      // Check if migration is needed
-      const currentVersion = settings.settingsVersion || 1;
-      if (currentVersion < SETTINGS_VERSION) {
-        const migratedSettings = this.migrateSettings(settings, currentVersion);
-        this.saveUserSettings(migratedSettings);
-        return migratedSettings;
-      }
-
-      // Merge with defaults to ensure all required fields exist
       return { ...DEFAULT_USER_SETTINGS, ...settings };
     } catch (error) {
-      console.warn(
-        "Failed to load user settings:",
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      console.warn("Failed to load user settings:", error);
       return { ...DEFAULT_USER_SETTINGS };
     }
   }
 
-  /**
-   * Migrate settings from an older version to the current version
-   */
-  private migrateSettings(
-    settings: UserSettings,
-    fromVersion: number,
-  ): UserSettings {
-    let migrated = { ...settings };
-
-    // Migration from version 1 to 2: Add new Super Agent 4.1 and Grok 4 Fast models
-    if (fromVersion < 2) {
-      const defaultModels = DEFAULT_USER_SETTINGS.models || [];
-      const existingModels = new Set(migrated.models || []);
-
-      // Add any new models that don't exist in user's current list
-      const newModels = defaultModels.filter(
-        model => !existingModels.has(model),
-      );
-
-      // Prepend new models to the list (newest models first)
-      migrated.models = [...newModels, ...(migrated.models || [])];
-    }
-
-    // Add future migrations here:
-    // if (fromVersion < 3) { ... }
-
-    migrated.settingsVersion = SETTINGS_VERSION;
-    return migrated;
-  }
-
-  /**
-   * Save user settings to ~/.super-agent/settings.json
-   */
   public saveUserSettings(settings: Partial<UserSettings>): void {
     try {
       this.ensureDirectoryExists(this.userSettingsPath);
-
-      // Read existing settings directly to avoid recursion
-      let existingSettings: UserSettings = { ...DEFAULT_USER_SETTINGS };
-      if (fs.existsSync(this.userSettingsPath)) {
-        try {
-          const content = fs.readFileSync(this.userSettingsPath, "utf-8");
-          const parsed = JSON.parse(content);
-          existingSettings = { ...DEFAULT_USER_SETTINGS, ...parsed };
-        } catch (error) {
-          // If file is corrupted, use defaults
-          console.warn("Corrupted user settings file, using defaults");
-        }
-      }
-
+      let existingSettings = this.loadUserSettings();
       const mergedSettings = { ...existingSettings, ...settings };
-
       fs.writeFileSync(
         this.userSettingsPath,
         JSON.stringify(mergedSettings, null, 2),
-        { mode: 0o600 }, // Secure permissions for API key
+        { mode: 0o600 },
       );
     } catch (error) {
-      console.error(
-        "Failed to save user settings:",
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      console.error("Failed to save user settings:", error);
       throw error;
     }
   }
 
-  /**
-   * Update a specific user setting
-   */
   public updateUserSetting<K extends keyof UserSettings>(
     key: K,
     value: UserSettings[K],
@@ -222,165 +163,110 @@ export class SettingsManager {
     this.saveUserSettings(settings);
   }
 
-  /**
-   * Get a specific user setting
-   */
   public getUserSetting<K extends keyof UserSettings>(key: K): UserSettings[K] {
-    const settings = this.loadUserSettings();
-    return settings[key];
+    return this.loadUserSettings()[key];
   }
 
-  /**
-   * Load project settings from .super-agent/settings.json
-   */
   public loadProjectSettings(): ProjectSettings {
     try {
       if (!fs.existsSync(this.projectSettingsPath)) {
-        // Create default project settings if file doesn't exist
-        this.saveProjectSettings(DEFAULT_PROJECT_SETTINGS);
         return { ...DEFAULT_PROJECT_SETTINGS };
       }
-
       const content = fs.readFileSync(this.projectSettingsPath, "utf-8");
-      const settings = JSON.parse(content);
-
-      // Merge with defaults
-      return { ...DEFAULT_PROJECT_SETTINGS, ...settings };
+      return { ...DEFAULT_PROJECT_SETTINGS, ...JSON.parse(content) };
     } catch (error) {
-      console.warn(
-        "Failed to load project settings:",
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      console.warn("Failed to load project settings:", error);
       return { ...DEFAULT_PROJECT_SETTINGS };
     }
   }
 
-  /**
-   * Save project settings to .super-agent/settings.json
-   */
-  public saveProjectSettings(settings: Partial<ProjectSettings>): void {
+  public saveProjectSettings(settings: ProjectSettings): void {
     try {
       this.ensureDirectoryExists(this.projectSettingsPath);
-
-      // Read existing settings directly to avoid recursion
-      let existingSettings: ProjectSettings = { ...DEFAULT_PROJECT_SETTINGS };
-      if (fs.existsSync(this.projectSettingsPath)) {
-        try {
-          const content = fs.readFileSync(this.projectSettingsPath, "utf-8");
-          const parsed = JSON.parse(content);
-          existingSettings = { ...DEFAULT_PROJECT_SETTINGS, ...parsed };
-        } catch (error) {
-          // If file is corrupted, use defaults
-          console.warn("Corrupted project settings file, using defaults");
-        }
-      }
-
-      const mergedSettings = { ...existingSettings, ...settings };
-
+      let existing = this.loadProjectSettings();
+      const merged = { ...existing, ...settings };
       fs.writeFileSync(
         this.projectSettingsPath,
-        JSON.stringify(mergedSettings, null, 2),
+        JSON.stringify(merged, null, 2),
       );
     } catch (error) {
-      console.error(
-        "Failed to save project settings:",
-        error instanceof Error ? error.message : "Unknown error",
-      );
+      console.error("Failed to save project settings:", error);
       throw error;
     }
   }
 
-  /**
-   * Update a specific project setting
-   */
   public updateProjectSetting<K extends keyof ProjectSettings>(
     key: K,
     value: ProjectSettings[K],
   ): void {
-    const settings = { [key]: value } as Partial<ProjectSettings>;
+    const settings = { [key]: value } as ProjectSettings;
     this.saveProjectSettings(settings);
   }
 
-  /**
-   * Get a specific project setting
-   */
   public getProjectSetting<K extends keyof ProjectSettings>(
     key: K,
   ): ProjectSettings[K] {
-    const settings = this.loadProjectSettings();
-    return settings[key];
+    return this.loadProjectSettings()[key];
   }
 
-  /**
-   * Get the current model with proper fallback logic:
-   * 1. Project-specific model setting
-   * 2. User's default model
-   * 3. System default
-   */
+  // --- Helper Methods using Active Provider ---
+
+  private getEffectiveSettings(): UserSettings {
+    const user = this.loadUserSettings();
+    const project = this.loadProjectSettings();
+    // Deep merge could be better, but for now simple spread (project overrides user)
+    return { ...user, ...project };
+  }
+
+  public getActiveProviderConfig(): ProviderConfig | undefined {
+    const settings = this.getEffectiveSettings();
+    const active = settings.active_provider;
+    return settings.providers?.[active];
+  }
+
   public getCurrentModel(): string {
-    const projectModel = this.getProjectSetting("model");
-    if (projectModel) {
-      return projectModel;
-    }
-
-    const userDefaultModel = this.getUserSetting("defaultModel");
-    if (userDefaultModel) {
-      return userDefaultModel;
-    }
-
-    return DEFAULT_PROJECT_SETTINGS.model || "grok-code-fast-1";
+    const config = this.getActiveProviderConfig();
+    return config?.model || config?.default_model || "grok-code-fast-1";
   }
 
-  /**
-   * Set the current model for the project
-   */
   public setCurrentModel(model: string): void {
-    this.updateProjectSetting("model", model);
+    const settings = this.loadUserSettings();
+    const active = settings.active_provider;
+    if (settings.providers && settings.providers[active]) {
+      settings.providers[active].model = model;
+      this.saveUserSettings(settings);
+    }
   }
 
-  /**
-   * Get available models list from user settings
-   */
   public getAvailableModels(): string[] {
-    const models = this.getUserSetting("models");
-    return models || DEFAULT_USER_SETTINGS.models || [];
+    // Return a default list of known supported models
+    return [
+      "grok-beta",
+      "grok-vision-beta",
+      "grok-2-vision-1212",
+      "grok-2-1212",
+      "grok-code-fast-1",
+      "GLM-4.7",
+    ];
   }
 
-  /**
-   * Get API key from user settings or environment
-   */
   public getApiKey(): string | undefined {
-    // First check environment variable
-    const envApiKey = process.env.SUPER_AGENT_API_KEY;
-    if (envApiKey) {
-      return envApiKey;
+    if (process.env.SUPER_AGENT_API_KEY) {
+      return process.env.SUPER_AGENT_API_KEY;
     }
-
-    // Then check user settings
-    return this.getUserSetting("apiKey");
+    const config = this.getActiveProviderConfig();
+    return config?.api_key;
   }
 
-  /**
-   * Get base URL from user settings or environment
-   */
   public getBaseURL(): string {
-    // First check environment variable
-    const envBaseURL = process.env.SUPER_AGENT_BASE_URL;
-    if (envBaseURL) {
-      return envBaseURL;
+    if (process.env.SUPER_AGENT_BASE_URL) {
+      return process.env.SUPER_AGENT_BASE_URL;
     }
-
-    // Then check user settings
-    const userBaseURL = this.getUserSetting("baseURL");
-    return (
-      userBaseURL || DEFAULT_USER_SETTINGS.baseURL || "https://api.x.ai/v1"
-    );
+    const config = this.getActiveProviderConfig();
+    return config?.base_url || "https://api.x.ai/v1";
   }
 }
 
-/**
- * Convenience function to get the singleton instance
- */
 export function getSettingsManager(): SettingsManager {
   return SettingsManager.getInstance();
 }

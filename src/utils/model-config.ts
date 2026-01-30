@@ -56,5 +56,6 @@ export function updateCurrentModel(modelName: string): void {
  */
 export function updateDefaultModel(modelName: string): void {
   const manager = getSettingsManager();
-  manager.updateUserSetting("defaultModel", modelName);
+  // Using setCurrentModel for now as defaultModel concept is merged with active provider's model
+  manager.setCurrentModel(modelName);
 }
